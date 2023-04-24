@@ -1,0 +1,440 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Advanced</title>
+</head>
+
+<body>
+
+<div class="content-container">
+
+<div id="menu-advanced" class="menu-container">
+</div>
+
+<div id="func-advanced" class="function-container">
+</div>
+
+</div><!-- content-container -->
+
+<script type="text/javascript">
+//<![CDATA[
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+/************菜单部分的响�?***************/
+
+var advMenuList = {
+    "running-status":{
+        text:$.su.CHAR.MENU.RUN_STATUS,
+        url: "system_state.html"
+    },
+    
+    
+    "basic-setting":{		
+		text: $.su.CHAR.MENU.BASIC_SETTING,
+		children:{
+            
+            "front-setting":{
+                text: "前端设置",
+                children: {
+                    "front-setting": {
+                        text: "前端设置",
+                        url: "front.html"
+                    }
+                 
+                }
+            },
+            
+			    "http-settings":{
+				   text: "WEB服务器",
+                children: {
+                    "http-settings": {
+                        text: "后端WEB服务器设置",
+                        url: "http_server.html"
+                    }
+              }
+			    },
+			    
+			    "mqtt-settings":{
+				  text: "服务器多端口",
+                children: {
+                    "mqtt-settings": {
+                        text: "本设置优先级高",
+                        url: "mqtt_server.html"
+                    }
+              }
+			    }
+			    
+		}
+	 },
+	 
+
+    "firewall":{		
+		text: "防护规则",
+		children:{
+			
+			     "alarm-setting":{
+                text: "运行模式",
+                children: {
+                    "alarm-setting": {
+                        text: "运行模式",
+                        url: "alarm.html"
+                    }
+                 
+                }
+            }, 
+            
+            "mod-rule":{
+                text: "防护规则",
+                children: {
+                    "mod-rule": {
+                        text: "防护规则",
+                        url: "rules.html"
+                    }
+                 
+                }
+            },                       
+			    
+			    "white-black":{
+				  text: "黑白名单",
+                children: {
+                    "white-ip": {
+                        text: "IP白名单",
+                        url: "whiteip.html"
+                    },
+                    "black-ip": {
+                        text: "IP黑名单",
+                        url: "blackip.html"
+                    },
+                    "white-url": {
+                        text: "URL白名单",
+                        url: "whiteurl.html"
+                    },
+					         "black-url": {
+                        text: "URL黑名单",
+                        url: "blackurl.html"
+                    }
+              }
+			    },
+			    
+			    "ddos":{
+                text: "DDOS防御",
+                children: {
+                    "ddos": {
+                        text: "DDOS防御",
+                        url: "ddos.html"
+                    }
+                 
+                }
+           },
+			    
+			    "dir-access":{
+                text: "目录限制",
+                children: {
+                    "dir-access": {
+                        text: "目录访问限制",
+                        url: "dir-access.html"
+                    }
+                 
+                }
+           },      
+			    
+			    "ip-setting":{
+				  text: "智能IP封禁",
+                children: {
+                    "ip-setting": {
+                        text: "智能IP封禁",
+                        url: "ip-setting.html"
+                    }
+              }
+			    },
+            
+			    "machine-learning":{
+				   text: "HTTP",
+                children: {
+                    "machine-learning": {
+                        text: "HTTP",
+                        url: "dhcp_lan_settings.html"
+                    }
+              }
+			    }
+			    
+		}
+	 },
+	 
+	  "newportal":{
+        text:"机器学习",
+        children:{
+            
+            "machine":{
+                text: "样本采集",
+                children: {
+                    "machine": {
+                        text: "样本采集",
+                        url: "machine.html"
+                    },
+					         "suffix-stat": {
+                        text: "文件类型",
+                        url: "suffix-stat.html"
+                    },
+					         "dir-stat": {
+                        text: "目录列表",
+                        url: "dir-stat.html"
+                    }                 
+                }
+            },                       
+			    
+			           
+			    "gan-rule":{
+				   text: "对抗规则",
+                children: {
+                    "gan-rule": {
+                        text: "对抗规则",
+                        url: "gan.html"
+                    }
+              }
+			    }
+			    
+		}
+	 },
+	 
+	 
+	 "behavior-control":{		
+		text: "日志查询",
+		children:{
+            
+            "atk-log":{
+                text: "攻击日志",
+                children: {
+                    "atk-log": {
+                        text: "攻击日志",
+                        url: "atk-log.html"
+                    }
+                 
+                }
+            },   
+            
+             "trace-log":{
+                text: "溯源日志",
+                children: {
+                    "trace-log": {
+                        text: "溯源日志",
+                        url: "trace-log.html"
+                    }
+                 
+                }
+            }, 
+            
+          "killip-log":{
+                text: "封禁日志",
+                children: {
+                    "killip-log": {
+                        text: "IP封禁日志",
+                        url: "killip-log.html"
+                    }
+                 
+                }
+            },                         
+			    
+			           
+			    "sys-log":{
+				   text: "系统日志",
+                children: {
+                    "sys-log": {
+                        text: "系统日志",
+                        url: "system_log_r.html"
+                    }
+              }
+			    }
+			    
+		}
+	 },
+	 
+	 
+	 	"advanced":{		
+		text: "统计分析",
+		children:{
+			
+			      "ip-stat":{
+                text: "IP流量统计",
+                children: {
+                    "ip-stat": {
+                        text: "流量统计",
+                        url: "ip-stat.html"
+                    },
+					         "http-stat": {
+                        text: "状态统计",
+                        url: "http-stat.html"
+                    }                 
+                }
+            }, 
+            
+            "ua-stat":{
+                text: "UA分析统计",
+                children: {
+                    "ua-stat": {
+                        text: "UA分析统计",
+                        url: "ua-stat.html"
+                    }
+                 
+                }
+            }, 
+            
+             "trace-url":{
+                text: "URL访问统计",
+                children: {
+                    "trace-url": {
+                        text: "URL访问统计",
+                        url: "trace-url.html"
+                    }
+                 
+                }
+            },   
+            
+            "atk-trend":{
+                text: "十日攻击趋势",
+                children: {
+                    "atk-trend": {
+                        text: "十日攻击趋势",
+                        url: "atk-trend.html"
+                    }
+                 
+                }
+            },  
+			           
+			    "atk-source":{
+				   text: "十大攻击源",
+                children: {
+                    "atk-source": {
+                        text: "十大攻击源",
+                        url: "atk-source.html"
+                    }
+              }
+			    },
+			    
+			    "atk-type":{
+				   text: "十大攻击类型",
+                children: {
+                    "atk-type": {
+                        text: "十大攻击类型",
+                        url: "atk-type.html"
+                    }
+              }
+			    }
+			    
+		}
+	 },
+	 
+	 	"sys-tools":{		
+		text: "系统管理",
+		children:{
+            
+            "change-passwd":{
+                text: "修改密码",
+                children: {
+                    "change-passwd": {
+                        text: "修改密码",
+                        url: "changepwd.html"
+                    }
+                 
+                }
+            }, 
+             
+          "remote":{
+				   text: "远程管理",
+                children: {
+                    "remote": {
+                        text: "远程管理",
+                        url: "remote.html"
+                    }
+              }
+			    },			           
+			    "upgrade":{
+				   text: "系统升级",
+                children: {
+                    "upgrade": {
+                        text: "系统升级",
+                        url: "upgrade.html"
+                    }
+              }
+			    },
+			    
+			    "restore":{
+				   text: "恢复出厂",
+                children: {
+                    "restore": {
+                        text: "恢复出厂模式",
+                        url: "restore.html"
+                    }
+              }
+			    },
+			    
+			    "reboot":{
+				   text: "系统重启",
+                children: {
+                    "reboot": {
+                        text: "系统重启",
+                        url: "reboot.html"
+                    }
+              }
+			    }
+			    
+		}
+	 }	 	 
+	 	 
+	 
+	
+	
+	
+
+};   
+
+
+
+
+
+var menuAdvanced = new $.su.Menu({
+    data: "./data/advanced.menu.json",//$.su.url("/admin/menu?form=advanced_menu"),//
+    urlPath: "./pages/userrpm/",
+    container: "div#menu-advanced",
+    tabMenuContainer: "#tab-menu",
+    list: advMenuList,
+    idTag: "advanced",
+    cls: "advanced",
+    handlers: {
+        init: function(e){
+        	  var str = window.location.search.substr(1);
+        	  
+        	  if (str.indexOf("atk-log") != -1)
+        	     this.goTo("atk-log");
+        	  else if (str.indexOf("trace-log") != -1)
+        	     this.goTo("trace-log");   
+        	  else if (str.indexOf("_token") != -1)
+        	      this.goTo("running-status");         	     
+         	  else if (str.length > 1) 
+        	     this.goTo(str);
+        	  else 
+                this.goTo("running-status");
+        },
+        goTo: function(e, name, url){
+        	$.su.app.menuGoTo(name, url, true);
+        }
+    }
+});
+
+
+$.su.menu = null;
+delete $.su.menu;
+$.su.menu = {};
+$.su.menu.advanced = menuAdvanced;
+
+});
+//]]>
+</script>
+</body>
+</html>

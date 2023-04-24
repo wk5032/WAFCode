@@ -1,0 +1,735 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>REMOTE_MNGT</title>
+<style type="text/css">
+</style>
+<style type="text/css">
+    #preview-frame{
+        border: none;
+        width: 600px;
+        height: 800px;
+    }
+</style>
+</head>
+
+<body>
+<div class="func-container">
+    <div id="remote_mngt_list">
+        <div id="remote_mngt_grid">
+        </div>
+    </div>
+    
+   <div id="clear-msg">
+    	<div id="clear-msg-content"></div>
+    </div>
+    
+
+    <div id="remote_mngt_list_help"></div>
+</div>
+
+
+ <div id="flow_editor">
+            
+        <input id="name" name="name" >       
+        <input id="must" name="must" > 
+        <input id="min" name="min" >
+        <input id="max" name="max">
+        <input id="mean" name="mean" >
+        <input id="sigma" name="sigma">
+        <input id="is_number" name="is_number" >
+        <input id="dim" name="dim">    
+   
+            
+ </div>
+    
+ <div id="flow-more">
+        <div class="state-content">
+           
+            <div id="ipstat-wrap" >
+                <div id="ipstat-enable" class="ipstat-text"></div>
+                <div id="ipstat-range" class="ipstat-text"></div>
+                <div id="ipstat-grid"></div>
+            </div>
+            
+        </div>
+ </div> 
+ 
+  <div id="frame-msg">
+            <iframe id="preview-frame"></iframe>
+  </div>
+    
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+
+function maskIntToMaskAddr(int_mask)
+
+{
+
+    var mask_addr = "";
+
+    if(parseInt(int_mask,10) < 0 || parseInt(int_mask,10) > 32)
+
+    {
+
+        return mask_addr;
+
+    }
+
+    var mask_num = parseInt(int_mask,10)/8;
+
+    var i = 0;
+
+    for(;i<=(mask_num-1);i++)
+
+    {
+
+        if(i != 0) mask_addr += ".";
+
+        mask_addr += "255";
+
+    }
+
+
+
+    if(mask_num < 4)
+
+    {
+
+        var maskTmp = parseInt(int_mask,10)%8;
+
+        maskTmp = (255 << (8-maskTmp)) & 255;
+
+        if( mask_num >= 1 )mask_addr += ".";
+
+        mask_addr += maskTmp.toString();
+
+    
+
+        for(i = mask_num+1 ; i<4 ; i++)
+
+        {
+
+            if(i!=0)mask_addr += ".";
+
+            mask_addr += "0";
+
+        }
+
+    }
+
+    return mask_addr;
+
+}
+
+function logicAnd(int_a,int_b)
+{
+	var binary_a = parseInt(int_a,10).toString(2);
+	var binary_b = parseInt(int_b,10).toString(2);
+	var len = (binary_a.length < binary_b.length) ? binary_a.length : binary_b.length;
+
+	if (len != 32)
+	{
+		return int_a&int_b;
+	}
+	
+	var cut = Math.abs(binary_a.length - binary_b.length);
+	var temp = '';
+
+	for (var i = 0 ; i < cut; i++)
+	{
+		temp = temp + '0';
+	}
+	
+	if (binary_a.length > binary_b.length)
+	{
+		binary_b = temp + binary_b;
+	}
+	else
+	{
+		binary_a = temp + binary_a;
+	}
+	var res = 0;
+	for (var i=len-1; i >= 0; i--)
+	{
+		if (binary_a.charAt(i)&binary_b.charAt(i) == 1)
+		{
+			if((len-1-i) >24)
+			{
+				res = Number(res) + 256*Number((1<<(len-9-i)));
+			}
+			else
+			{
+				res = Number(res) + Number((1<<(len-1-i)));
+			}
+		}
+	}
+	return res;
+}
+
+$(document).ready(function(e){
+    var maxIpMask;
+    var URL_REMOTE_MNGT_LIST = $.su.url("/admin/ganrule?form=gan");
+    
+     var IFSTATS_LIST_URL = $.su.url("/admin/ifstat?form=list");
+    var IPSTATS_LIST_URL = $.su.url("/admin/ganparam?form=list");
+    var IPSTATS_SETTING_URL = $.su.url("/admin/ipstats?form=setting"); 
+    
+    var $frameMsg = $("#frame-msg").msg({
+        showHead: true,
+        closeBtn: true,
+        cls:"",
+        title: $.su.CHAR.WPORTAL.PREVIEW_WINDOW_TITLE,
+        type: 'window'
+    }).msg("hide");	
+    
+    
+    function loadIfstat(){
+        IFSTAT_PROXY.read({}, function(data){
+            ifstat_grid.grid("load", data);
+        });
+        clearTimeout($.su.TIMEOUT_LOAD_IFSTAT);
+        clearTimeout($.su.TIMEOUT_LOAD_IPSTAT);
+        $.su.TIMEOUT_LOAD_IFSTAT = setTimeout(function() {
+            loadIfstat();
+        }, 10000);
+    }
+    
+    function filter(v){
+        if(parseInt(v) > 1000*1000*1000*1000){
+            v = v * 1.0 / (1000*1000*1000*1000);
+            return v.toFixed(1) + "TB";
+        }
+        if(parseInt(v) > 1000*1000*1000){
+            v = v * 1.0 / (1000*1000*1000);
+            return v.toFixed(1) + "GB";
+        }
+        if(parseInt(v) > 1000*1000/10){
+            v = v * 1.0 / (1000*1000);
+            return v.toFixed(1) + "MB";
+        }
+        if(parseInt(v) <= 1000*1000/10){
+            return "<0.1MB";
+        }
+        return v + "B";
+    }
+        
+         var flow_msg = $("#flow-more").msg({
+        title: "专家干预是个别接口样本采集不全可能产生误报，修改后重启生效，阻断设置必须由网络安全专家操作，否则引起的问题自负。",
+        cls:"new-page state-more",
+        showHead: true,
+        type:"",
+        okHandler:function(){
+            clearTimeout($.su.TIMEOUT_LOAD_IFSTAT);
+            clearTimeout($.su.TIMEOUT_LOAD_IPSTAT);
+        }
+    }).on("ev_close",function(){
+        clearTimeout($.su.TIMEOUT_LOAD_IFSTAT);
+        clearTimeout($.su.TIMEOUT_LOAD_IPSTAT);
+    });
+    
+    var name = $("#name").textbox({
+        fieldLabel: "参数名称",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:128,
+        tips:"（1-128个字符）"
+    });
+    
+     /*var alert = $("#alert").textbox({
+        fieldLabel: "检测模式",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:1,
+        tips:"（0报警、1阻断）"
+    });*/
+    
+      var must = $("#must").textbox({
+        fieldLabel: "此参数必须有",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:1,
+        tips:"（0允许没有、1必须有）"
+    });
+
+    var min = $("#min").textbox({
+        fieldLabel: "最小值",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:8,
+        tips:"（1-8个数字,0代表不设置）"
+    });
+    var max = $("#max").textbox({
+        fieldLabel: "最大值",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:8,
+        tips:"（1-8个数字,0代表不设置）"
+    });
+    var mean = $("#mean").textbox({
+        fieldLabel: "均值",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:16,
+        tips:"（1-8个数字）"
+    });
+    var sigma = $("#sigma").textbox({
+        fieldLabel: "标准差",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:16,
+        tips:"（1-8个数字）"
+    });
+    
+     var is_number = $("#is_number").textbox({
+        fieldLabel: "是否数字",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:1,
+        tips:"（0否、1是）"
+    });
+     var dim = $("#dim").textbox({
+        fieldLabel: "特征向量",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:64,
+        tips:"（1-64个字符）"
+    });
+  
+    
+    
+     var IPSTAT_PROXY = new $.su.Proxy({
+        url: IPSTATS_LIST_URL
+    });
+
+    var IPSTAT_SETTING_PROXY = new $.su.Proxy({
+        url: IPSTATS_SETTING_URL
+    });
+    
+
+    var ipstat_grid = $("#ipstat-grid").grid({
+    	 editor: {
+            content:"#flow_editor",
+            fields: [
+                {name: "name"},
+                {name:"enabled"},            
+                {name:"must"},
+                {name: "min"},
+                {name: "max"},
+                {name:"mean"},
+                {name:"sigma"},
+                {name:"is_number"},
+                {name:"dim"}
+            ]
+        },
+        store:{
+            proxy: IPSTAT_PROXY,
+            fields:[
+                {name:"name"},
+                {name:"enabled"},
+                {name:"expert"},
+                {name:"must"},
+                {name:"alert"},
+                {name:"min"},
+                {name:"max"},
+                {name:"mean"},
+                {name:"sigma"},
+                {name:"is_number"},
+                {name:"dim"},
+                {name:"tx_bytes"},
+                {name:"rx_bytes"}
+            ]
+        },
+        minLines: 0,
+        columns: [
+            {
+                text: $.su.CHAR.GRID.ID, 
+                xtype: "rownumberer",
+                width:10,
+                hidden:false
+            },
+            {
+                text: "名称", 
+                width:80,
+                dataIndex: "name"
+            },            
+            /*{
+                text: "模式", 
+                width:20,
+                dataIndex: "alert",
+                renderer:function(dd, index, data){
+								if(dd && dd == "1"){
+									return "阻断"
+								}else{
+									return  "报警";
+								}
+							}
+            },*/
+            {
+                text: "是否阻断", 
+                width:20,
+                xtype: "dropcolumn",
+                dataIndex: "alert",
+                editor: {
+                    xtype: "switchbutton",
+                    fieldLabel:$.su.CHAR.GRID.STATUS
+                }
+            }, 
+            {
+                text: "专家干预", 
+                width:30,
+                dataIndex: "expert",
+                renderer:function(dd, index, data){
+								if(dd && dd == "1"){
+									return "yes"
+								}else{
+									return  "--";
+								}
+							}
+            },
+            {
+                text: "最小值", 
+                width:20,
+                dataIndex: "min",
+                renderer:function(dd, index, data){
+								if(dd && dd == "0"){
+									return  "--";
+								}else {
+									return dd;
+								}
+							 }
+            },
+            {
+                text: "最大值", 
+                width:20,
+                dataIndex: "max",
+                renderer:function(dd, index, data){
+								if(dd && dd == "0"){
+									return  "--";
+								}
+								else {
+									return dd;
+								}
+							 }
+            },
+            {
+                text: "均值", 
+                width:30,
+                dataIndex: "mean"
+            },
+            {
+                text: "标准差", 
+                width:30,
+                dataIndex: "sigma"
+            },
+            {
+                text: "数字", 
+                width:20,
+                dataIndex: "is_number",
+                renderer:function(dd, index, data){
+								if(dd && dd == "1"){
+									return "Yes"
+								}else{
+									return  "--";
+								}
+							}
+            },
+            {
+                text: "特征向量", 
+                width:50,
+                dataIndex: "dim"
+            },
+            {
+                text: "是否启用",
+                width:30,
+                xtype: "statuscolumn",
+                dataIndex: "enabled",
+                editor: {
+                    xtype: "switchbutton",
+                    fieldLabel:$.su.CHAR.GRID.STATUS
+                }
+            },  
+            {
+                xtype: "settings",
+                //width: $.su.CHAR.SETTING.MAC_FILTERING.SETTING_WIDTH
+                width:30
+            }
+        ],
+        operation: [{
+            xtype: "totalCount",
+            cls: "left",
+            fieldLabel: "参数个数"
+        }, "refresh","add"]
+    });
+  
+        
+        
+   
+    
+    
+
+
+	$("#remote_mngt_list").panel({
+		title: "自动对抗规则",
+		collapsible: false,
+		help:$("#remote_mngt_list_help")
+	});
+
+	var remoteMngtProxy = new $.su.Proxy({
+		url: URL_REMOTE_MNGT_LIST
+	});
+
+
+	var clear_msg = $("#clear-msg").msg({
+		showHead:true,
+		closeBtn:true,
+		title: "是否删除所有规则，然后全部重新学习?",
+		type:"confirm",
+		cls: "l",
+		yesText:$.su.CHAR.DHCP.MSG_YES,
+        noText:$.su.CHAR.DHCP.MSG_NO,
+        noHandler:function(){},
+        okHandler:function(){
+            remoteMngtProxy.write({method:"flush"},function(data){
+				naptGrid.grid("getStore").load();
+			});
+        }
+	});
+
+
+
+	var naptGrid = $("#remote_mngt_grid").grid({
+   editor: {
+			validator:function()
+			{								
+				return true;
+
+	    },
+            content:"default",
+            fields: [        
+            
+         
+                {name: "enabled"}
+            ]
+    },
+		store:{
+			proxy: remoteMngtProxy,
+			fields: [
+		 		 {name: "name"},
+         {name: "hash"}, 
+         {name: "filename"},                
+         {name: "param_num"},
+         {name: "progress"},
+         {name: "alert"},
+         {name: "expert"},
+         {name: "stop"},
+         {name: "enabled"}
+			],
+			autoLoad: true
+		},
+		paging:[],
+		columns: [
+			
+			{
+				xtype: "rownumberer",
+				width: 20
+			},
+			{
+				text: "规则号",//$.su.CHAR.REMOTE_MNGT.IP_RANGE,
+				dataIndex: "hash",
+        width: 30
+			},
+			{
+				text: "文件名",//$.su.CHAR.REMOTE_MNGT.IP_RANGE,
+				dataIndex: "filename",
+        width: 30,
+        hidden:true
+			},
+			{
+				text: "服务器URL",
+				dataIndex: "name",
+        width: 150,
+        editor: {
+	                  xtype: "textbox",                
+                    text: "URL接口",
+                    tips: "（可填部分）",
+                    allowBlank: true
+	              },
+        renderer:function(dd, index, data){
+               
+								//console.log(dd,index,data);
+								if("" == dd || typeof dd == "undefined"){
+									return "---";
+								}
+								
+								var addHTMl = "";
+								addHTMl += "<div class=\"dhcp-client-bind2\" data-index="+ index +">";
+								
+								addHTMl += "<a style=\"color:blue\"; href=\"#\">" + dd + "</a>";	
+								//addHTMl += "<span class=\"icon\"></span>";
+								//addHTMl += "<sapn class=\"add\">" + $.su.CHAR.DHCP.BIND + "</span>";
+								addHTMl += "</div>";
+								return addHTMl;					
+									
+							
+							}
+			},
+			{
+				text: "参数个数",
+				dataIndex: "param_num",
+        width: 30
+			},
+			{
+				text: "专家干预", 
+				dataIndex: "expert",
+				width: 30,
+				renderer:function(dd, index, data){
+					if(dd && dd == "0"){
+						return "--"
+					}else{
+						return  "yes";
+					}
+				}
+			},
+			{
+				text: "是否阻断", 
+				dataIndex: "alert",
+				width: 30,				
+			},
+			
+			{
+	                text: "学习状态",
+	                width: 30,
+	                xtype: "learningcolumn",
+	                dataIndex: "stop" /*,
+	                editor: {
+	                    xtype: "switchbutton",
+	                    fieldLabel:$.su.CHAR.GRID.STATUS
+	                }*/
+	    },
+	    {
+				text: "学习进度", 
+				dataIndex: "progress",
+				width: 30,				
+			},
+			/**/
+	             {
+	                text: "是否启用",
+	                width: 30,
+	                xtype: "statuscolumn",
+	                dataIndex: "enabled"
+	               /* editor: {
+	                    xtype: "switchbutton",
+	                    fieldLabel:$.su.CHAR.GRID.STATUS
+	                }*/
+	             },
+			         {
+                text: "专家设置",
+                width: 50,
+                dataIndex: "detail",
+                renderer:function(dd, index, data){
+               
+								//console.log(dd,index,data);
+								if("" == dd || typeof dd == "undefined"){
+									return "---";
+								}
+								
+								var addHTMl = "";
+								addHTMl += "<div class=\"dhcp-client-bind\" data-index="+ index +">";
+								addHTMl += "<span class=\"icon\"></span>";
+								//addHTMl += "<sapn class=\"add\">" + $.su.CHAR.DHCP.BIND + "</span>";
+								addHTMl += "</div>";
+								return addHTMl;							
+									
+								//return "&nbsp&nbsp" + "<a href='javascript:void(0);' onclick='open_detail()' class='btn-detail' data-index='"+ index +"'>更多</a>";								
+
+								return data;
+							}
+            },
+            {
+                xtype: "onlydelete",
+                width: 30
+            }
+		],
+			operation:[{
+            xtype: "totalCount",
+            fieldLabel: "规则条数",
+            cls: "left xs",
+            labelCls:"xs"
+        }, "search", "delete"]
+        
+  }).delegate('div.dhcp-client-bind', 'click', function(e){
+        var index = $(this).data("index");
+        var linedata = naptGrid.grid("getStore").data[index]; 
+        var d = new Date();
+        var n = d.getTime(); 
+        
+                 
+      
+        $("#ipstat-enable").text("接口地址: " + linedata.name);        
+        getSystemDate("uri="+ linedata.name + "&time=" +n);
+        flow_msg.msg("show");
+        return;
+      
+     
+    }).delegate('div.dhcp-client-bind2', 'click', function(e){
+               
+        var index = $(this).data("index");
+        var linedata = naptGrid.grid("getStore").data[index];   
+         
+        document.getElementById('preview-frame').contentDocument.location.href = "/yangben-"+linedata.filename;
+        $frameMsg.msg("show");
+        return;
+      
+     
+    }
+    
+    
+    );
+    
+    
+    $("a.operation-btn.btn-delete span.text").text($.su.CHAR.DHCP.CLEAR);
+    $("a.operation-btn.btn-delete").click(function(e){
+		e.stopPropagation();
+		e.preventDefault();
+		clear_msg.msg("show");
+	});
+    
+    
+  
+  function getSystemDate(v){
+	$.ajax({
+		url: '/admin/ganuri?' + v ,		
+		type: 'GET'
+	}).done(function(data){
+		
+		  $("#ipstat-grid").grid("getStore").load();
+	});
+}   
+	
+
+    var helpNaptGrid = new $.su.Help({
+        container: "div#remote_mngt_list_help",
+        content: "nothing"
+    });
+
+});
+</script>
+</body>
+</html>

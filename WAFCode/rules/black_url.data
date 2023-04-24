@@ -1,0 +1,4 @@
+#########黑名单URL，一律视为攻击###########################
+/hihttps/blacklist1
+/hihttps/blacklist2
+/hihttps/blacklist3

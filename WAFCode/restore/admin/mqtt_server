@@ -1,0 +1,8 @@
+{
+	"id": 1,
+		"others": {                  
+		"max_rules": 3            
+	}, 
+	"result":[{"textname":"服务器1","mac":"192.168.1.2","http_port":"22"}], 
+	"error_code": "0"
+}

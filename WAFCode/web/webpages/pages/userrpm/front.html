@@ -1,0 +1,1138 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>account_config</title>
+</head>
+
+<body>
+<div class="func-container">
+	<div id="account">
+	 	<form id="account-setting">
+	    	<input type="text"  id="http_port" name="http_port" value="" />
+			<input id="https_port_switch" name="https_port_switch"/>
+	    	<input type="text"  id="https_port" name="https_port" value="" />
+	    	<input type="text"  id="auth_port" name="auth_port" value="" />			
+			<input type="text"  id="web_timeout" name="web_timeout" value="" />
+
+			<input id="ssh_port_switch" name="ssh_port_switch"/>
+	 		<input type="text"  id="ssh_port" name="ssh_port" value="" />
+	    </form>
+	</div>
+	
+	    <div id="panel_import">
+        <div id="import_introduce"></div>
+        <br />
+        <form id="form_import">
+            <input id="file_import" name="archive" type="file" />
+            <button id="btn_import" name="btn_import" type="button" ></button>
+        </form>
+    </div>
+
+    <div id="alert_import">
+        <h4 class="title" id="confirm_import">
+            <span class="text" id="confirm_content_import"></span>
+        </h4>
+
+        <div id="process_import" class="reboot-loading-msg hidden">
+            <p id="tips_import" class="reboot-progressbar-text"></p>
+            <input id="pro_bar_import" type="text" />
+        </div>
+    </div>
+    
+ 
+    
+    
+    	<div id="own_editor">
+			
+			<input id="name" name="name" >
+			<input id="textname" name="textname" >
+			<input id="choice" name="choice" >
+			<textarea id="members" name="members" ></textarea>
+			<button id="clear" name="clear" ></button>	
+			<div style="margin-bottom:50px;"></div>			
+			<form id="image-uploader">
+				<input id="imagefile" name="imagefile" type="file"/>	
+				<button id="upload" name="upload" ></button> 	
+			</form>
+			<div style="margin-bottom:50px;"></div>
+			<input id="comment" name="comment"/>				
+			
+		</div>
+		<div id="urlset_list">
+			<div id="qos_introduce">
+			</div>
+			<div id="urlset_grid">
+	        </div>
+		 </div>
+		 <div id="link-detail-window">
+	        <table class="link-detail-table detail">
+	            <tr>
+	                <td class="detail-value"></td>
+	            </tr>
+	        </table>
+	    </div>
+    
+    
+	
+	<div id="help_admin_config"></div>
+</div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+	
+	//新增IP-MAC绑定列表配置文件的“导出”和“导入”功能，by Chen Yiqun , 18may2017 
+    var URL_IMPORT_EXPORT = $.su.url("/upload_pem?form=config"); 
+    var IMPORT_EXPORT_PROXY = new $.su.Proxy({
+        url: URL_IMPORT_EXPORT,
+    });
+    var import_query_interval = false;
+    var import_total_time = 3*1000;
+/********************** 导出配置文件 ************************************
+    $("#panel_export").panel({
+        title: $.su.CHAR.IMB.EXPORT_LIST,
+        help: $("#imb_help")
+    });
+
+    var form_export = $("#form_export").form({
+        proxy: IMPORT_EXPORT_PROXY,
+        submitBtn:null,
+        autoLoad:false,
+        formEnctype: "multipart/form-data",
+        traditional: true,
+        hiddenFrame: true,
+    });
+
+    $("#btn_export").button({
+        text: $.su.CHAR.IMB.EXPORT_BTN,
+        handler:function(){
+            form_export.form("submit", {operation:"export"}, function(data){
+
+            }, function(error){
+
+            }, function(fail){
+
+            });
+        }
+    });*/
+
+/********************** 导入配置文件 *************************************/
+    $("#import_introduce").html($.su.CHAR.IMB.INTRODUCE2);
+    $("#panel_import").panel({
+        title: "SSL证书更新",
+        collapsible: true
+    });
+    
+
+    $("#file_import").file({
+        fieldLabel: $.su.CHAR.IMB.FILE_PATH,
+        allowBlank:false,
+        extension: "pem",
+        cls:"inline"
+    });   
+
+    $("#form_import").form({
+        proxy: {url: URL_IMPORT_EXPORT},
+        formEnctype: "multipart/form-data",
+        traditional: true,
+        hiddenFrame: true,
+        fields: [
+            {"name": "archive"}
+        ],
+        autoLoad: true
+    });
+
+    $("#btn_import").button({
+        text: $.su.CHAR.IMB.IMPORT_BTN,
+        handler: function(){
+            if($("#form_import").form('validate'))
+            {
+                $("#alert_import").msg("show");
+            }
+            else
+            {
+                return false;
+            }
+
+        },
+        cls: "submit inline"
+    });
+
+//导入文件时的弹框提示和进度条
+    $("#confirm_content_import").html($.su.CHAR.BACKUP.RESTORE_CONFIRM_CONTENT);
+    $("#tips_import").html("正在导入SSL证书");
+
+
+    function hideProMsg(){
+        clearTimeout(import_query_interval);
+        pro_bar_import.progressbar("stop");
+        pro_bar_import.progressbar("reset");
+        import_query_interval = false;
+
+        $("#alert_import").hide();
+        $("#alert_import").msg("close", function(){
+            $("#alert_import").msg('showButtons');
+            $('#confirm_import').show();
+            $("#process_import").hide();
+        });
+    }
+
+    function loadcfg_write()
+    {
+        pro_bar_import.progressbar("animate", 0, 1, import_total_time, function(){
+            setTimeout(function() {
+                hideProMsg();
+            }, 2000);        
+        });
+
+        $("#form_import").form('submit',{operation:"import"}, function(){
+            pro_bar_import.progressbar("stop");
+            pro_bar_import.progressbar("setValue", 1, "", true);
+            imb_reload();
+            setTimeout(function() {
+                hideProMsg();
+            }, 2000);
+        },function(){
+            hideProMsg();
+        },function(){
+            hideProMsg();
+        });
+    }
+
+    $("#alert_import").msg({
+        okHandler:function(){
+            $("#alert_import").msg('hideButtons');
+            $('#confirm_import').hide();
+            $("#process_import").show();
+            loadcfg_write();
+            return false;
+        },
+        cancelHandler:function(){
+            return true;
+        },
+        cls: 'warning reboot-confirm-size',
+        closeBtn: false,
+        type: "confirm"
+    });
+
+    var pro_bar_import  = $('input#pro_bar_import').progressbar({
+        fieldLabel: null,
+        cls: 'inline',
+        width: 326,
+        height: 6,
+        value: 0
+    }); 
+
+
+    $.su.app.runningModule.addUnloadHandler(function(){
+        if(import_query_interval)
+        {
+            clearTimeout(import_query_interval);
+            import_query_interval = false;
+        }
+
+        pro_bar_import.progressbar("stop");
+        pro_bar_import.progressbar("reset");
+    });
+
+/****************************以上为新增内容, by Chen Yiqun, 18May2017*****************************/
+	
+	
+	
+	
+	var ACC_CONFIG_URL = $.su.url("/admin/front?form=management");
+	var origin_http_port = "80";
+	var origin_https_port = "443";
+	var origin_ssh_port = "1864";
+	var origin_auth_port = "1863";
+	var origin_web_timeout = "6";
+	var origin_ssh_enable = "on";
+	var origin_https_enable = "off";
+	var SYS_PORTS = ["7788","8888"];
+
+	$("div.func-container").page({
+		title: $.su.CHAR.ACCOUNT.TITLE,
+		help: ""	//可能是个调用的id 也可能是个url
+	});
+
+	$("div#account").panel({
+		title: "端口设置",
+		collapsible: false,
+		help:$("#help_admin_config")
+	});
+
+	$("input#ssh_port_switch").switchbutton({
+		fieldLabel:$.su.CHAR.ACCOUNT_CONFIG.SSH_ENABLE
+    }).on("ev_setValue", function(e, newValue){
+    	/*
+		if(newValue == "on" || newValue == "ssh_port_switch"){
+		    $("input#ssh_port").textbox("show");
+			$("input#ssh_port").textbox("enableStyle");
+		}else{
+		    $("input#ssh_port").textbox("hide");
+			$("input#ssh_port").textbox("disableStyle");
+		}
+		*/
+	});
+	  
+	/*$("input#ssh_port_switch").checkbox({
+		fieldLabel:$.su.CHAR.ACCOUNT_CONFIG.SSH_ENABLE,
+		items:[
+			{boxlabel: "开启", inputValue: "on", uncheckedValue: "off"}
+		]
+	}).on("ev_change", function(e, oldValue, newValue){
+		if(newValue == "on" || newValue == "ssh_port_switch"){
+			$("input#ssh_port").textbox("enableStyle");
+		}else{
+			$("input#ssh_port").textbox("disableStyle");
+		}
+	});*/
+
+	$("input#https_port_switch").switchbutton({
+		fieldLabel:$.su.CHAR.ACCOUNT_CONFIG.HTTPS_ENABLE
+    }).on("ev_setValue", function(e, newValue){
+    	
+		if(newValue == "on" || newValue == "https_port_switch"){
+		    $("input#https_port").textbox("show");
+			$("input#https_port").textbox("enableStyle");
+		}else{
+		    $("input#https_port").textbox("hide");
+			$("input#https_port").textbox("disableStyle");
+		}
+		
+	});
+	  
+	$("input#http_port").textbox({
+		fieldLabel: $.su.CHAR.ACCOUNT_CONFIG.HTTP_PORT,
+		allowBlank: false,
+		tips: "(80、1-65535)",
+		validator: function(v){
+		    var  val_http = $("input#http_port").textbox("getValue");
+			var  val_https = $("input#https_port").textbox("getValue");
+			var  val_ssh = $("input#ssh_port").textbox("getValue");
+			var  val_auth = $("input#auth_port").textbox("getValue");
+			for(var i = 0; i < SYS_PORTS.length; i++){
+				if(val_http == SYS_PORTS[i]){
+					return "与系统默认端口号冲突";
+				}
+			}
+			if (val_http == val_https && val_http != origin_http_port)
+			{
+			    return "与https端口号冲突";
+			}
+
+			if (val_http == val_auth && val_http != origin_http_port)
+			{
+			    return "与认证端口号冲突";
+			}
+			else if (val_http == 80)
+			{
+				return true;
+			}
+			else if (val_ssh == val_http  && val_http != origin_http_port)
+			{
+			    return "与系统默认端口号冲突";
+			}
+			else
+			{
+			    return (new $.su.vtype({
+			    	vtype: "number",
+			    	min: 1,
+			    	max: 65535,
+			    	validator:function(value){
+			    		if(value < this.min || value > this.max){
+			    			return "请输入80或者1-65535之间的数字";
+			    		}else{
+			    			return true;
+			    		}
+			    	}
+			    }).validate(v));
+			}
+            
+        }
+	});
+	
+	$("input#https_port").textbox({
+		fieldLabel: $.su.CHAR.ACCOUNT_CONFIG.HTTPS_PORT,
+		allowBlank: false,
+		tips: "(443、1-65535)",
+		validator: function(v){
+		    var  val_http = $("input#http_port").textbox("getValue");
+			var  val_https = $("input#https_port").textbox("getValue");
+			var  val_ssh = $("input#ssh_port").textbox("getValue");
+			var  val_auth = $("input#auth_port").textbox("getValue");
+			for(var i = 0; i < SYS_PORTS.length; i++){
+				if(val_https == SYS_PORTS[i]){
+					return "与系统默认端口号冲突";
+				}
+			}
+			if (val_https == val_http && val_https != origin_https_port)
+			{
+			    return "与http端口号冲突";
+			}
+
+			if (val_https == val_auth && val_https != origin_https_port)
+			{
+			    return "与认证端口号冲突";
+			}
+
+			else if (val_https == 443)
+			{
+				return true;
+			}
+			else if (val_ssh == val_https  && val_https != origin_https_port)
+			{
+			    return "与系统默认端口号冲突";
+			}
+			else
+			{
+			    return (new $.su.vtype({
+			    	vtype: "number", 
+			    	min: 1, 
+			    	max: 65535,
+			    	validator:function(value){
+			    		if(value < this.min || value > this.max){
+			    			return "请输入443或者1024-65535之间的数字";
+			    		}else{
+			    			return true;
+			    		}
+			    	}
+			    }).validate(v));
+			}
+            
+        }
+	});
+
+	$("input#auth_port").textbox({
+		fieldLabel: "MQTT服务端口",
+		allowBlank: false,
+		tips: "(1863、1-65535)",
+		validator: function(v){
+		    var  val_http = $("input#http_port").textbox("getValue");
+			var  val_https = $("input#https_port").textbox("getValue");
+			var  val_ssh = $("input#ssh_port").textbox("getValue");
+			var  val_auth = $("input#auth_port").textbox("getValue");
+			for(var i = 0; i < SYS_PORTS.length; i++){
+				if(val_https == SYS_PORTS[i]){
+					return "与系统默认端口号冲突";
+				}
+			}
+			if (val_https == val_auth && val_auth != origin_auth_port)
+			{
+			    return "与https端口号冲突";
+			}
+
+			if (val_http == val_auth && val_auth != origin_auth_port)
+			{
+			    return "与http端口号冲突";
+			}
+
+			else if (val_auth == 1863)
+			{
+				return true;
+			}
+			else if (val_ssh == val_auth  && val_auth != origin_auth_port)
+			{
+			    return "与系统默认端口号冲突";
+			}
+			else
+			{
+			    return (new $.su.vtype({
+			    	vtype: "number", 
+			    	min: 1, 
+			    	max: 65535,
+			    	validator:function(value){
+			    		if(value < this.min || value > this.max){
+			    			return "请输入1863或者1-65535之间的数字";
+			    		}else{
+			    			return true;
+			    		}
+			    	}
+			    }).validate(v));
+			}
+            
+        }
+	});
+	
+	$("input#ssh_port").textbox({
+	    fieldLabel: "MQTTS服务端口",
+		allowBlank: false,
+		tips: "(1864、1-65535)",
+		validator: function(v){
+		    var  val_http = $("input#http_port").textbox("getValue");
+			var  val_https = $("input#https_port").textbox("getValue");
+			var  val_ssh = $("input#ssh_port").textbox("getValue");
+			if (val_ssh == val_http && val_ssh != origin_ssh_port)
+			{
+			    return "与http端口号冲突";
+			}
+			else if (val_ssh == val_https  && val_ssh != origin_ssh_port)
+			{
+			    return "与https端口号冲突";
+			}
+			else if (val_ssh == 1864)
+			{
+				return true;
+			}
+			else
+			{
+			    return (new $.su.vtype({
+			    	vtype: "number", 
+			    	min: 1, 
+			    	max: 65535,
+			    	validator:function(value){
+			    		if(value < this.min || value > this.max){
+			    			return "请输入1864或者1-65535之间的数字";
+			    		}else{
+			    			return true;
+			    		}
+			    	}
+			    }).validate(v));
+			}
+            
+        }
+	});
+	
+	$("input#web_timeout").textbox({
+	    fieldLabel: $.su.CHAR.ACCOUNT_CONFIG.WEB_TIMEOUT,
+		allowBlank: false,
+		tips: $.su.CHAR.ACCOUNT_CONFIG.WEB_TIMEOUT_TIPS,
+		validator: function(v){
+			return (new $.su.vtype({vtype: "number", min: 5, max: 60}).validate(v));
+        }
+	});
+
+	
+	var pwdProxy = new $.su.Proxy({
+		url: ACC_CONFIG_URL,
+		autoLoad:false
+	});
+
+
+	
+	$("form#account-setting").form({
+		proxy: pwdProxy,
+		/*去掉默认提示框*/
+		//showPrompt: false,
+		fields: [
+			{name: "ssh_port_switch", mapping: "ssh_port_switch"},
+			{name: "ssh_port", mapping: "ssh_port"},
+			{name: "http_port", mapping: "http_port"},
+			{name: "https_port_switch", mapping: "https_port_switch"},
+			{name: "https_port", mapping: "https_port"},
+			{name: "auth_port", mapping: "auth_port"},
+			{name: "web_timeout", mapping: "web_timeout"}	
+		],
+		//autoLoad:true,/
+		validator:function(){
+			if($("input#http_port").textbox("validate") !== true){
+				return false;
+			}
+			if($("input#https_port").textbox("validate") !== true){
+				return false;
+			}
+			if($("input#ssh_port").textbox("validate") !== true){
+				return false;
+			}
+			if($("input#auth_port").textbox("validate") !== true){
+				return false;
+			}
+			if($("input#web_timeout").textbox("validate") !== true){
+				return false;
+			}
+			else{
+				return true;
+			}
+		},
+		submitBtn: "default"
+	}).on("ev_loadData", function(e, data){
+		origin_http_port = data.http_port;
+		origin_https_port = data.https_port;
+		origin_ssh_port = data.ssh_port;
+		origin_web_timeout =data.web_timeout;
+		origin_auth_port =data.auth_port;
+		
+		origin_ssh_enable = data.ssh_port_switch;
+		origin_https_enable = data.https_port_switch;
+		//SYS_PORTS = data.port_list;
+		$("#ssh_port_switch").switchbutton("setValue", origin_ssh_enable);		
+		$("#https_port_switch").switchbutton("setValue", origin_https_enable);		
+	});
+
+	tarButton = $("form#account-setting").find("button.button-button");
+	$(tarButton).button({
+		handler: function(){
+			if($("form#account-setting").form("validate") !== true){
+				return false;
+			}
+
+			/*获取当前协议类型*/
+			var protocol = window.location.protocol;
+			/*获取当前host，去掉端口部分*/
+			var host = window.location.host;
+			/*获取当前端口号*/
+			var port = window.location.port;
+			/*获取改动后的端口号*/
+			var  val_http = $("input#http_port").textbox("getValue");
+			var  val_https = $("input#https_port").textbox("getValue");
+			var  val_ssh = $("input#ssh_port").textbox("getValue");
+			var  val_timeout = $("input#web_timeout").textbox("getValue");
+			//var  val_ssh_enable = $("input#ssh_port_switch").switchbutton("getValue1");
+	  
+			//console.log(val_ssh_enable)
+
+			
+            
+           
+			switch(protocol){
+				case "http:":
+					if("" == port){
+						port = "80";
+						host = host + ":";
+					}else{
+						host = host.match(/.*:/);
+						host = host[0];
+					}
+					
+					break;
+					
+					/*如无改变*/
+					if((origin_http_port == val_http) && (origin_https_port == val_https)){
+						break;
+					}else{
+
+						if(!$("input#http_port").textbox("validate")){
+							return;
+						}
+						if(!$("input#https_port").textbox("validate")){
+							return;
+						}
+						$("form#account-setting").form("setPrompt", false);
+						$("form#account-setting").form("submit");
+						if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                            $.su.app.errorOperation.denied(706);
+                            $("div#global-warning-msg").msg("hideButtons");
+                        } 
+						setTimeout(function(){
+							location.href = "http://" + host + val_http;
+						},2000);
+						return;
+					}
+				break;
+				case "https:":
+					if("" == port){
+						port = "443";
+						host = host + ":";
+					}else{
+						host = host.match(/.*:/);
+						host = host[0];
+					}
+					if((origin_http_port == val_http) && (origin_https_port == val_https)){
+						break;
+					}else{
+						if(!$("input#http_port").textbox("validate")){
+							return;
+						}
+						if(!$("input#https_port").textbox("validate")){
+							return;
+						}
+						$("form#account-setting").form("setPrompt", false);
+						$("form#account-setting").form("submit");
+						if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                            $.su.app.errorOperation.denied(706);
+                            $("div#global-warning-msg").msg("hideButtons");
+                        } 
+						setTimeout(function(){
+							location.href = "https://" + host + val_https;
+						},2000);
+						return;
+					}
+				break;
+				default:
+				break;
+			}
+
+			/*
+			if((origin_http_port == val_http) && (origin_https_port == val_https)
+				&& (origin_web_timeout == val_timeout) && (origin_ssh_port == val_ssh)
+				&& (origin_ssh_enable == val_ssh_enable)){
+					if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+	                	$.su.app.errorOperation.denied(705);
+	                }
+            }else{
+
+            	*/
+            $.su.loading.show();
+            $("form#account-setting").form("submit",{},function(data){
+            	$("form#account-setting").form("setPrompt", true);
+            	$.su.loading.hide();
+            },function(error){
+            	$.su.loading.hide();
+            	$("form#account-setting").form("setPrompt", false);
+            },function(fail){
+            	$.su.loading.hide();
+            	$("form#account-setting").form("setPrompt", false);
+            });
+            //}
+		}
+	});
+	/*
+	$("input#ssh_port_switch").switchbutton("hide");
+	$("input#ssh_port").textbox("hide");*/
+	$("input#web_timeout").textbox("hide");
+	$("input#https_port_switch").switchbutton("hide");       
+	$("input#ssh_port_switch").switchbutton("hide");	
+	
+	$("#panel_import").panel("hide");
+	
+	
+	
+	
+	
+	
+	
+	var urlset_proxy = new $.su.Proxy({
+		url:$.su.url('/admin/sslcrt?form=list')
+	});
+
+	var upload_proxy = new $.su.Proxy({
+		url:$.su.url('/upload_pem??form=list')
+	});
+
+	var MAX_WEB_PER_RULE = 100;
+
+	$("div#urlset_list").panel({
+		title:"SSL证书管理",
+		collapsible: false,
+		help: $("#help")
+	});
+
+	$("div#urlset_setting").text($.su.CHAR.WEBGROUP.GROUP_SETTING);
+
+	$("div#setting_upload").text($.su.CHAR.WEBGROUP.GROUP_IMPORT);
+
+	$("#name").textbox({
+		readOnly:true
+	});
+	$("#name").textbox("hide");
+
+	$("#qos_introduce").html("SSL证书必须为PEM格式，并且务必正确，否则会无法启动！上载完成后，点击上面保存生效。");
+	var textname = $("#textname").textbox({
+		fieldLabel: "域名",
+		cls: "l",
+		allowBlank: false,
+		//vtype: "name",
+		maxLength:28,
+		tips:$.su.CHAR.WEBGROUP.GROUP_TIP
+	});
+
+	var choice = $("#choice").checkbox({
+		fieldLabel:$.su.CHAR.WEBGROUP.GROUP_FORMAT,
+		columns:2,
+		items:[
+			{boxlabel:$.su.CHAR.WEBGROUP.GROUP_URL,inputValue: "url", uncheckedValue: "url_off"},
+			{boxlabel:$.su.CHAR.WEBGROUP.GROUP_KEYWORD,inputValue: "keyword", uncheckedValue: "keyword_off"}
+		]
+	});
+	choice.checkbox("hide");
+
+	var members = $("#members").textarea({
+		fieldLabel: $.su.CHAR.WEBGROUP.GROUP_MEMBER,
+		inputCls:'dig xl',
+		cls:"inline",
+		readOnly:true,
+		tips: null
+	});
+	
+	
+		
+	var clear = $("#clear").button({
+		text: $.su.CHAR.WEBGROUP.GROUP_CLEAR,
+		cls: "m inline",
+		tips:$.su.CHAR.WEBGROUP.GROUP_SEP,
+		handler:function(e){
+			members.textarea("reset");
+		}
+	});
+	
+		members.textarea("hide");
+		clear.button("hide");
+
+	var comment = $("#comment").textbox({
+		fieldLabel:$.su.CHAR.WEBGROUP.GROUP_COMMENT,
+		tips:$.su.CHAR.WEBGROUP.GROUP_OPTIONAL
+	});
+	comment.textbox("hide");
+
+
+
+	var imageForm = $('#image-uploader').form({
+		autoLoad:false,
+        proxy: upload_proxy,
+        formEnctype: "multipart/form-data",
+        traditional: true,
+        hiddenFrame: true,
+        fields: [
+            {name: "imageFile"}
+        ],
+        promptTextSuccessed:$.su.CHAR.WEBGROUP.GROUP_UPLOAD_S,
+        showPromptFail:$.su.CHAR.WEBGROUP.GROUP_UPLOAD_F
+    });
+
+
+
+	var imagefile = $("#imagefile").file({
+		fieldLabel: $.su.CHAR.WEBGROUP.FILE_PATH,
+		allowBlank: false,
+		extension:"pem",
+		cls:"inline"
+	});
+	var upload = $("#upload").button({
+		text: "上传证书",
+		cls: "l inline",
+		tipsCls:"tab",
+		tips:"警告：PEM证书文件名要求是英文字母和数字，不能含中文和特殊字符，否则无效！",
+		handler:function(e){
+			if($("input#imagefile").val() == ""){
+				imagefile.file("setError", $.su.CHAR.WEBGROUP.CHOOSE_FILE);
+				return false;
+			}
+			if(!$("input#imagefile").file("validate")){
+				return false;
+			}
+			
+			var filestr = $("input#imagefile").val();
+			var from = filestr.lastIndexOf("\\") + 1;
+			var to   = filestr.length;
+			
+			filestr = filestr.substring(from,to);
+						
+			members.textarea("setValue", filestr);
+			imageForm.form("prompt", true);
+			//$.su.loading.show();
+			imageForm.form('submit', {operation: 'upload'}, function(data){
+				        imageForm.form("prompt", true);
+                $.su.loading.hide();
+                /*if(data.result != null && typeof data.result != "undefined"){
+                	//console.log(data.result)
+                	var webStr = "";
+                	$(data.result).each(function(i, obj){
+                		webStr += obj + "\n";
+                	});
+                	//console.log(webStr)
+                	members.textarea("setValue", webStr);
+                }*/
+            },function(error_code){
+                $.su.loading.hide();
+                imageForm.form("prompt", false);
+
+            },function(fail){
+                $.su.loading.hide();
+                imageForm.form("prompt", false);
+            });
+		}
+	});
+	//$("#note").html("您还可以通过导入文件来配置组成员");
+
+	var $linkDetail = $("#link-detail-window").msg({
+		showHead:true,
+        closeBtn: true,
+        cls:"l",
+        title: $.su.CHAR.WEBGROUP.GROUP_MEMBER,
+        type: "window"
+    }).msg("hide");
+
+    function showDetail(domain){
+ 		var domainString = "";  
+		var domainArray = domain.split('\n');
+		
+		for(var i = 0; i < domainArray.length; i++){
+			if(i == domainArray.length - 1){
+				domainString += domainArray[i] + "</br>";
+			}else{
+				domainString += domainArray[i] + "&nbsp&nbsp&nbsp&nbsp" + domainArray[i+1] + "</br>";
+				i++;
+			}
+			
+		}
+		$linkDetail.find(".detail-value").html(domainString).css({
+			"lineHeight":"20px",
+			"textAlign":"center",
+			"wordBreak":"break-all"
+		});
+        $linkDetail.msg('show');
+    }
+
+    function textSelect(o, a, b){
+        var a = parseInt(a, 10), b = parseInt(b, 10);
+        if(o.createTextRange){//IE浏览器
+            var range = o.createTextRange();         
+            range.moveStart("character", a);
+            range.moveEnd("character",b);
+            range.select();
+        }else{
+            o.setSelectionRange(a, b);
+            o.focus();
+        }
+        
+    }
+
+	var urlset_grid = $("#urlset_grid").grid({
+		editor:{
+			content:"#own_editor",
+			fields:[
+				{name:"name"},
+				{name:"textname"},
+				{name:"choice"},
+				{name:"members"},
+				{name:"refer"},
+				{name:"config"},
+				{name:"enabled"},
+				{name:"comment"}
+			],
+			validator:function(){
+				var store = urlset_grid.grid("getStore");
+				var data = store.data;
+				var currentName = textname.textbox("getValue");
+				var isValid = true;
+				var errBegin = -1;
+                var errEnd = -1;
+				if($("#textname").attr("readOnly") != "readonly" && $("#textname").attr("readOnly") != true){
+					$(data).each(function(i, obj){
+						if(obj.textname == currentName){
+							textname.textbox("setError", $.su.CHAR.WEBGROUP.EXIST);
+							isValid = false;
+							return false;//相当于break
+						}
+					});
+				}
+				
+
+				if(!isValid){
+					return false; //名称重名则不能提交
+				}
+
+				var webList = members.textarea("getValue");
+				if("" == webList){
+					members.textarea("setError", $.su.CHAR.WEBGROUP.NOT_NULL);
+					$("div.textarea-container").find("div.widget-error-tips").css("margin-top", "110px");
+					isValid = false;
+					return isValid;
+				}
+
+				if(webList.toString().length > 20 * MAX_WEB_PER_RULE){
+					members.textarea("setError", $.su.CHAR.WEBGROUP.TOO_LONG);
+					$("div.textarea-container").find("div.widget-error-tips").css("margin-top", "110px");
+					isValid = false;
+					return isValid;
+				}
+
+
+
+				webList = webList.match(/(.*[\n]){0,}.*[^\n]/);
+				//console.log("webList",webList);
+				webList = webList[0];
+				//console.log("webList0",webList);
+				webList = webList.split(/[\s,;]+/);
+				//console.log("webLists",webList);
+
+				if(webList.length > MAX_WEB_PER_RULE){
+					members.textarea("setError",$.su.CHAR.WEBGROUP.MAX_SUPPORT);
+					$("div.textarea-container").find("div.widget-error-tips").css("margin-top", "110px");
+					isValid = false;
+					return isValid;
+				}
+
+				var tmpList = "";
+				var reg =  new RegExp(/^(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])){3}$|(^(\*\.)?([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.){0,}[a-zA-Z]{2,6}$)|(^\*)?\w{1,100}/);
+				var errString = "";
+				$(webList).each(function(i, obj){
+					if(obj == ""){
+						webList.splice(i,1);
+						return;
+					}
+					if(obj.toString().length > 64){
+						isValid = false;
+						errBegin = tmpList.length;
+                        errEnd = errBegin + obj.length + 1;
+						errString = $.su.CHAR.WEBGROUP.LONG;
+						return;
+					}
+					for(var i=0;i<obj.toString().length;++i)
+					{
+						if(obj.toString()[i] == '*' && i!=0)
+						{
+							isValid = false;
+							errBegin = tmpList.length;
+							errEnd = errBegin+obj.length+1;
+							errString = "*只能出现在输入网址或关键字的开头";
+							return;
+						}
+					}
+					if(!reg.test(obj)){
+						isValid = false;
+                        errBegin = tmpList.length;
+                        errEnd = errBegin + obj.length + 1;
+                        errString = $.su.CHAR.WEBGROUP.ERR_FORMAT;
+						return;
+					}
+					//console.log(obj)
+					tmpList = tmpList + obj.toString() + "\n";
+					//console.log("tmp",tmpList)
+
+
+				});
+
+				tmpList = tmpList.match(/(.*[\n]){0,}.*[^\n]/);
+				if(!isValid){
+					textSelect($("textarea").get(0), errBegin, errEnd);
+					members.textarea("setError", errString);
+					$("div.textarea-container").find("div.widget-error-tips").css("margin-top", "110px");
+					return isValid;
+				}
+
+				members.textarea("setValue", tmpList[0]);
+				
+				return isValid;
+			}
+		},
+		store:{
+			proxy:urlset_proxy,
+			fields:[
+				{name:"name"},
+				{name:"textname"},
+				{name:"choice"},
+				{name:"members"},
+				{name:"refer"},
+				{name:"config"},
+				{name:"enabled"},
+				{name:"comment"}
+			],
+			autoLoad:true
+		},
+		paging:[],
+		columns:[
+			 /*{
+                xtype: "checkcolumn"
+            },*/
+            {
+                xtype: "rownumberer"
+            }, 
+            {
+				dataIndex:"name",
+				hidden:true
+			}, 
+			{
+				text: "域名备注",
+				xtype: "comment",
+				dataIndex:"textname",	
+				width:100
+			},
+			{
+				dataIndex:"choice",
+				hidden:true
+			},
+			{
+				text:"文件名",
+				dataIndex:"members",
+				width:100,
+				renderer:function(dd, index, data){
+					//console.log(dd,index,data);
+					if("" == dd || typeof dd == "undefined"){
+						return "---";
+					}
+					var URL = dd.split("\n");
+					
+					switch(URL.length){
+						case 0:
+							return "---";
+							break;
+						case 1:
+							return URL[0];
+							break;
+						case 2:
+							return URL[0] + "</br>" + URL[1];
+							break;
+						default:
+							if(edit_index == "add"){
+								index++;
+							}
+							return URL[0] + "&nbsp&nbsp" + "<a href='javascript:void(0);' class='btn-detail' data-index='"+ index +"'>更多</a>";
+							break;
+					}     
+
+					return data;
+				}
+			},
+			{
+				dataIndex:"refer",
+				hidden:true
+			},
+			{
+				xtype:"comment",
+				hidden:true
+			},
+			{
+                text: $.su.CHAR.REMOTE_MNGT.STATUS,
+                xtype: "statuscolumn",
+                dataIndex: "enabled",
+               //hidden:true,
+                editor: {
+                    xtype: "switchbutton",
+                    fieldLabel:$.su.CHAR.GRID.STATUS
+                }
+      },
+			{
+				xtype: "onlydelete",
+				text: "删除",
+                width: $.su.CHAR.SETTING.IMB.SETTING_WIDTH
+			}
+		],
+		operation: 'prompt|add'
+	}).delegate('a.btn-detail', 'click', function(e){
+        var index = $(this).data('index');
+        showDetail(urlset_grid.grid("getStore").data[index].members);
+    }).on("ev_load", function(e, data, others){
+    	//console.log(urlset_grid.grid("getStore").data[0].max_num_per_rule)
+    	//MAX_WEB_PER_RULE = urlset_grid.grid("getStore").data[0].max_num_per_rule;
+    	if(others){
+    		MAX_WEB_PER_RULE = others.max_num_per_rule;
+    	}
+    });
+
+	var editor = $(urlset_grid.grid("getEditor"));
+	var edit_index = "";
+	editor.on("ev_startEdit", function(e, editingIndex){
+		edit_index = editingIndex;
+		imagefile.file("reset");
+		if(editingIndex != "add"){
+			//textname.textbox("disableStyle");
+			textname.textbox("enableStyle");
+		}else{
+			textname.textbox("enableStyle");
+		}
+	});
+	
+	
+	
+	
+	
+	
+	
+	
+	var helpAdmin = new $.su.Help({
+		container: "div#help_admin_config",
+		content: ["NOTHING_CONFIG"]
+	});
+
+});
+</script>
+</body>
+
+</html>

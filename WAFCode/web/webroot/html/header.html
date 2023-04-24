@@ -1,0 +1,72 @@
+<script src="../../js/jquery.cookie.js"></script>
+<script type="text/javascript">
+	$(function() {
+		//关于我们子项显示
+		$(".user ul li:has(span)").hover(function(){
+			$(this).children("span").stop(true,true).slideDown(100);
+			$("#last-child .icon-admin").css("background","url(../../images/icon-adminh.png) 50% 50% no-repeat");
+			$("#last-child .icon-fin").css("background","url(../../images/icon-finh.png) 50% 50% no-repeat");
+			$("#last-child").css("color","#fff");	
+        },function(){
+		    $(this).children("span").stop(true,true).slideUp(100);
+			$("#last-child .icon-admin").css("background","url(../../images/icon-admin.png) 50% 50% no-repeat");
+			$("#last-child .icon-fin").css("background","url(../../images/icon-fin.png) 50% 50% no-repeat");
+			$("#last-child").css("color","#b8bdcb");	
+		});
+		
+		$("#jumpimg").attr("onclick","javascript:window.location.href='"+$.cookie('home_page')+"';")
+		
+		  $.ajax({
+	           url: '../../users/logined'
+	       }).done(function( data, textStatus, jqXHR ) {
+	           $('#login_username').text(data.name);
+	       });
+		  
+		  
+		 
+	});
+	
+
+</script>
+
+<div class="row head">
+	<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 logo" style="padding-left: 0px;">
+		<img id="jumpimg" src="../../images/logo.png" style="cursor:pointer;" />
+	</div>
+	<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 user">
+		<ul>
+			<li><a href="http://www.hihttps.com" target="_blank">官方网站</a></li>
+			<li><a href="http://www.hihttps.com" target="_blank">友情链接</a></li>
+			<li><a href="https://www.github.com/qq4108863" target="_blank">开放源码</a></li>
+			<li><a href="javascript:showUs();">关于我们</a></li>
+			<!-- 	<li>
+				<a href="javascript:;" id="last-child"><i class="icon icon-admin"></i><span id="login_username">管理员</span><i class="icon icon-fin"></i></a>
+				<span class="menu-child" id="menu-child" style="display: none; width: 150px;">
+					<a href="../config/changepassword.html?1" target="_Blank"><i class="icon icon-user"></i>修改密码</a>
+					<a href="../../logout"><i class="icon icon-out"></i>退&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;出</a>
+				</span>
+			</li>
+<!-- 			<li class="warning"><img src="../../images/warning.png"/><b>666</b></li> -->
+		</ul>
+	</div>
+
+	</div>
+	
+	
+<div class="mask" id="us_mask" style="display:none;">
+	<div class="dialog aboutus-bg">
+	<h1>
+	<span style="padding-left:20px;"></span>
+	关于我们
+	<span class="t911-icon icon-close fr" onclick="closeUs()"></span>
+	</h1>
+	<div class="t911-con">
+	<img src="../../images/aboutus-logo.png" style="margin:20px 0px;"/>
+	<p class="aboutus-con">CopyRight 2020 版权所有：www.hihttps.com</p>
+	</div>	
+	<div class="t911-confirm" style="text-align:center;padding:0px;">
+	<input class="t911-btn btn-add" type="button" value="确 定" onclick="closeUs()">
+	</div>
+	</div>
+</div>
+</div>

@@ -1,0 +1,11 @@
+# Apache webserver
+.htaccess
+.htdigest
+.htpasswd
+.jsp
+.php
+.jspx
+.sh
+aa.pem
+.bin
+.env

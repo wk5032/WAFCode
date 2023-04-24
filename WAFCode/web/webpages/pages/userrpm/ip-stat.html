@@ -1,0 +1,858 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>SYSTEM_ROUTETBL</title>
+</head>
+
+<body>
+<div class="func-container">
+	
+	
+	 <div id="own_editor">
+        <input type="text"  id="time_set_date" name="date" value="" />    
+       	<input id="time_set_year" name="time_set_year"/>
+	    	<input id="time_set_month" name="time_set_month"/>
+	    	<input id="time_set_day" name="time_set_day"/>
+
+            
+    </div>
+
+    <div id="function_setting">
+        <form id="ipstat_setting">
+            <input id="status" name="status" value=""/>
+            <input type="text" id="ip" name="ip" value="" />
+            <span>/</span>
+            <input type="text" id="mask" name="mask" value="" />
+        </form>
+    </div>
+
+	 <div id="ipstat_list">
+	 	<div id="ipstat_list_grid">
+
+		</div>
+        <div id="sort_remind"></div>
+	 </div>
+
+	 
+</div>
+    <div id="ip_stats_help"></div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+    var URL_STATS_SETTING = $.su.url("/admin/ipstats?form=setting");
+	var URL_STATS_LIST = $.su.url("/admin/ipstats?form=list");
+
+    $("#function_setting").panel({
+        title: $.su.CHAR.IP_STATS.TITLE_SETTING,
+        collapsible: false,
+        help: $("#ip_stats_help")
+    });
+    
+    $("#function_setting").panel("hide");
+
+    var setting_proxy = new $.su.Proxy({
+        url: URL_STATS_SETTING,
+        /* async: false*/
+    });
+
+    $("input#status").switchbutton({
+        fieldLabel: $.su.CHAR.IP_STATS.SETTING_STATUS
+    });
+
+    $("input#ip").textbox({
+		fieldLabel: $.su.CHAR.IP_STATS.SETTING_IP_MASK,
+		cls: 'inline part-seperate',
+		allowBlank: false,
+		textFormat: $.su.format.ip,
+		vtype: 'ip'
+	});
+
+	$("input#mask").textbox({
+		fieldLabel: null,
+		cls: 'inline part-seperate',
+		allowBlank: false,
+        vtype: {
+            vtype: "netmask",
+            allowAllOneFlag: true,
+            allowAllZeroFlag: true
+        }
+	});
+
+   $("#ipstat_setting").form({
+        proxy: setting_proxy,
+        fields: [
+            {name: "status", mapping: "status"},
+            {name: "ip", mapping: "ip"},
+            {name: "mask", mapping: "mask"}
+        ],
+        submitBtn: "default"
+    });
+
+    $("#ipstat_list").panel({
+        //title: $.su.CHAR.IP_STATS.TITLE_LIST,
+        title:"",
+        collapsible: false
+    });
+
+    function filter(v){
+        if(parseInt(v) > 1024*1024*1024){
+            v = v * 1.0 / (1024*1024*1024);
+            return v.toFixed(1) + "G";
+        }
+        if(parseInt(v) > 1024*1024){
+            v = v * 1.0 / (1024*1024);
+            return v.toFixed(1) + "M";
+        }
+        return v;
+    }
+    
+    
+    function calc_time(v){
+    	  var  sec = parseInt(v) % 60;
+    	   
+        if(parseInt(v) > 60*60){
+        	 sec = (parseInt(v) % 3600) / 60; 
+            v = v * 1.0 / (60*60) - 0.5;                     
+            return v.toFixed(0) + "时" + sec.toFixed(0)+ "分";
+        }
+        if(parseInt(v) > 60){
+            v = v * 1.0 / (60);
+            return v.toFixed(0) + "分" + sec + "秒";
+        }
+        return v + "秒";
+    }    
+    
+    
+    
+    
+    function updateDate(){
+		var year = time_year.combobox("getValue");
+		var month = time_month.combobox("getValue");
+		var day = time_day.combobox("getValue");
+		var date_str = month + "/" + day + "/" + year;
+		//var date_str = month + "-" + day + "-" + year;
+		date_data.textbox("setValue", date_str);
+		
+		/*year = end_time_year.combobox("getValue");
+		month = end_time_month.combobox("getValue");
+		day = end_time_day.combobox("getValue");
+		date_str = month + "/" + day + "/" + year;
+		end_date_data.textbox("setValue", date_str);*/
+	}
+
+	function updateDateChoice(){
+		var year_value = time_year.combobox("getValue");
+		var year = parseInt(year_value[0]);
+		var month_value = time_month.combobox("getValue");
+		var month = parseInt(month_value[0]);
+		var day_value = time_day.combobox("getValue");
+		var day = day_value[0];
+		var isLeap = false;
+
+		if((((year % 4) == 0) && ((year % 100) != 0)) || (year % 400) == 0){
+			isLeap = true;
+		}
+
+		if(month == 2){
+			if(isLeap){
+				time_day.combobox("loadData", time_day_29);
+				//end_time_day.combobox("loadData", time_day_29);
+				if(parseInt(day) > 29){
+					day = "01";
+				}
+			}else{
+				time_day.combobox("loadData", time_day_28);
+				//end_time_day.combobox("loadData", time_day_28);
+				if(parseInt(day) > 28){
+					day = "01";
+				}
+			}
+
+		}else if((month % 2 == 0 && month > 7) || (month % 2 == 1 && month < 8)){
+			time_day.combobox("loadData", time_day_31);
+			//end_time_day.combobox("loadData", time_day_31);
+		}else{
+			time_day.combobox("loadData", time_day_30);
+			//end_time_day.combobox("loadData", time_day_30);
+		}
+		time_day.combobox("setValue", day);
+		//end_time_day.combobox("setValue", day);
+	}
+
+	var time_year = $("#time_set_year").combobox({
+		fieldLabel: "选择日期",
+		inputCls:"s",
+		cls:"inline",
+		tips:"年",
+		tipsCls:"time-separator",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+		updateDateChoice();
+	});
+	
+	var time_year_arr = []; 
+	for(var i = 2018; i <= 2030; i++){
+		var year_tmp = {name: i.toString(), value:i.toString()};
+		time_year_arr.push(year_tmp);
+	}
+	time_year.combobox("loadData", time_year_arr);
+
+	var time_month = $("#time_set_month").combobox({
+		fieldLabel:"",
+		inputCls:"s",
+		labelCls:"hidden",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"月",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDateChoice();
+		updateDate();
+	});
+
+	var time_month_arr = []; 
+	for(var i = 1; i <= 12; i++){
+		if(i < 10){
+			i = "0" + i.toString();
+		}else{
+			i = i.toString();
+		}
+		var month_tmp = {name: i, value:i};
+		time_month_arr.push(month_tmp);
+	}
+	time_month.combobox("loadData", time_month_arr);
+
+	var time_day = $("#time_set_day").combobox({
+		fieldLabel: "",
+		labelCls:"hidden",
+		inputCls:"s",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"日",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+	});
+	var time_day_28 = [];
+	var time_day_29 = [];
+	var time_day_30 = [];
+	var time_day_31 = [];
+
+	for(var i = 1; i <= 31; i++){
+		if(i < 10){
+			i = "0" + i.toString();
+		}else{
+			i = i.toString();
+		}
+		var day_tmp = {name: i, value:i};
+
+		switch(i){
+			case "31":
+				time_day_31.push(day_tmp);
+				break;
+			case "30":
+				time_day_31.push(day_tmp);
+				time_day_30.push(day_tmp);
+				break;
+			case "29":
+				time_day_31.push(day_tmp);
+				time_day_30.push(day_tmp);
+				time_day_29.push(day_tmp);
+				break;
+			default:
+				time_day_31.push(day_tmp);
+				time_day_30.push(day_tmp);
+				time_day_29.push(day_tmp);
+				time_day_28.push(day_tmp);
+				break;
+		}
+	}
+	time_day.combobox("loadData", time_day_31);
+	//end_time_day.combobox("loadData", time_day_31);
+	
+	
+	
+		var date_data = $("input#time_set_date").textbox({
+		fieldLabel: $.su.CHAR.TIME_SETTING.DATE,
+		vtype:"date",
+		allowBlank:false,
+		inputCls:"xl",
+		tips: $.su.CHAR.TIME_SETTING.DATEFORMAT
+	}).on("ev_setValue",function(e, value){
+		if(!value){
+			return false;
+		}
+		
+		var date_para = value.split("/");
+		var year = date_para[2];
+		var month = date_para[0];
+		var day = date_para[1];
+		time_year.combobox("setValue", year);
+		time_month.combobox("setValue", month);
+		time_day.combobox("setValue", day);
+	}).textbox("hide");
+	
+/*
+	$("input#time_set_time").time({
+		//fieldLabel: "时间",
+		inputCls:"xl",
+		tips:"",
+		cls:"inline-block",
+		autoTrim: true
+	});
+	
+	$("input#time_set_time").time("setValue", "24:00:99");
+	
+	
+	
+	var end_time_year = $("#end_time_set_year").combobox({
+		fieldLabel: "结束时间",
+		inputCls:"s",
+		cls:"inline",
+		tips:"年",
+		tipsCls:"time-separator",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+		updateDateChoice();
+	});
+	
+		end_time_year.combobox("loadData", time_year_arr);
+
+	var end_time_month = $("#end_time_set_month").combobox({
+		fieldLabel:"",
+		inputCls:"s",
+		labelCls:"hidden",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"月",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDateChoice();
+		updateDate();
+	});
+	
+	end_time_month.combobox("loadData", time_month_arr);
+	
+	var end_time_day = $("#end_time_set_day").combobox({
+		fieldLabel: "",
+		labelCls:"hidden",
+		inputCls:"s",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"日",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+	});
+	
+		end_time_day.combobox("loadData", time_day_31);
+	
+	
+	var end_date_data = $("input#end_time_set_date").textbox({
+		fieldLabel: $.su.CHAR.TIME_SETTING.DATE,
+		vtype:"date",
+		allowBlank:false,
+		inputCls:"xl",
+		tips: $.su.CHAR.TIME_SETTING.DATEFORMAT
+	}).on("ev_setValue",function(e, value){
+		if(!value){
+			return false;
+		}
+		
+		var date_para = value.split("/");
+		var year = date_para[2];
+		var month = date_para[0];
+		var day = date_para[1];
+		end_time_year.combobox("setValue", year);
+		end_time_month.combobox("setValue", month);
+		end_time_day.combobox("setValue", day);
+	}).textbox("hide");
+
+
+	$("input#end_time_set_time").time({
+		//fieldLabel: "时间",
+		inputCls:"xl",
+		tips:"",
+		cls:"inline-block",
+		autoTrim: true
+	});
+	*/
+	
+	
+	
+	    var now = new Date();
+			var year = now.getFullYear();
+			var month = now.getMonth() + 1;
+			var date = now.getDate();
+			var hour = now.getHours();
+			var minute = now.getMinutes();
+			var second = now.getSeconds();
+			if (month < 10){month = "0"+month;}
+			if (date < 10){date = "0"+date;}
+			if (hour < 10){hour = "0"+hour;}
+			if (minute < 10){minute = "0"+minute;}
+			if (second < 10){second = "0"+second;}
+	    
+	    //$("#time_set_time").time("setValue", "00:00:00");
+			//$("#time_set_time").time("setValue", hour+":"+minute+":"+second);
+			$("#time_set_date").textbox("setValue", month+"/"+date+"/"+year);
+			//$("#end_time_set_time").time("setValue", hour+":"+minute+":"+second);
+			//$("#end_time_set_date").textbox("setValue", month+"/"+date+"/"+year);
+	
+	
+	
+	
+	
+		
+    
+    
+
+	var ip_grid = $("div#ipstat_list_grid").grid({
+		editor: {
+            content:"#own_editor",
+            fields: [               
+            ]
+        },
+		store:{
+			proxy: {
+				url: URL_STATS_LIST
+			},
+			fields: [
+				        {name: "addr"},
+				        {name: "geoip"},
+				        {name: "stime"},
+				        {name: "etime"},
+				        {name: "time"},
+                {name: "tx_bps"},
+                {name: "rx_bps"},
+                {name: "tx_pps"},
+                {name: "rx_pps"},
+                {name: "tx_bytes"},
+				        {name: "rx_bytes"},
+                {name: "tx_pkts"},
+				        {name: "rx_pkts"},
+				        {name: "note"}
+			],
+			autoLoad: true
+		},
+		minLines: 0,
+		columns: [
+			{
+				text: $.su.CHAR.GRID.ID,
+				xtype: "rownumberer",
+				width:30
+        //hidden:true
+			},
+			{
+				text: $.su.CHAR.IP_STATS.ADDR,
+				width:60,
+				dataIndex: "addr",
+				renderer:function(dd, index, data){
+               
+								//console.log(dd,index,data);
+								if("" == dd || typeof dd == "undefined"){
+									return "---";
+								}
+								
+								var addHTMl = "";
+								addHTMl += "<div class=\"dhcp-client-bind\" data-index="+ index +">";
+								
+								addHTMl += "<a style=\"color:blue\"; href=\"#\">" + dd + "</a>";	
+								//addHTMl += "<span class=\"icon\"></span>";
+								//addHTMl += "<sapn class=\"add\">" + $.su.CHAR.DHCP.BIND + "</span>";
+								addHTMl += "</div>";
+								return addHTMl;							
+									
+								//return "&nbsp&nbsp" + "<a href='javascript:void(0);' onclick='open_detail()' class='btn-detail' data-index='"+ index +"'>更多</a>";								
+
+								return data;
+							}
+			},
+			{
+				text: 'IP地理位置',
+				width:60,
+				dataIndex: "geoip",		
+			},
+			{
+				text: '开始时间',
+				width:50,
+				dataIndex: "stime",		
+			},
+			{
+				text: '结束时间',
+				width:50,
+				dataIndex: "etime",		
+			},
+			{
+				text: '在线时长',
+				width:50,
+				dataIndex: "time",
+                renderer: function(v){
+                    return calc_time(v);
+                }		
+			},
+      /*{
+				text: $.su.CHAR.IP_STATS.TX_BPS,
+				width:90,
+				dataIndex: "tx_bps",
+				hidden:true
+			},*/
+      {
+				text: $.su.CHAR.IP_STATS.RX_BPS,
+				width:60,
+				dataIndex: "rx_bps",
+				hidden:true
+			},
+      {
+				text: $.su.CHAR.IP_STATS.TX_PPS,
+				width:60,
+				dataIndex: "tx_pps",
+				hidden:true
+			},
+      {
+				text: $.su.CHAR.IP_STATS.RX_PPS,
+				width:60,
+				dataIndex: "rx_pps",
+				hidden:true
+			},
+     {
+				text: $.su.CHAR.IP_STATS.TX_BYTES,
+				width:60,
+				dataIndex: "tx_bytes",
+                renderer: function(v){
+                    return filter(v);
+                }
+			},
+			{
+				text: $.su.CHAR.IP_STATS.RX_BYTES,
+				width:60,
+				dataIndex: "rx_bytes",
+                renderer: function(v){
+                    return filter(v);
+                }
+			},
+            {
+				//text: $.su.CHAR.IP_STATS.TX_PKTS,
+				text: "请求数量",
+				width:60,
+				dataIndex: "tx_pkts",
+                renderer: function(v){
+                    return filter(v);
+                }
+			},
+			{
+				//text: $.su.CHAR.IP_STATS.RX_PKTS,
+				text: "攻击数量",
+				width:60,
+				dataIndex: "rx_pkts",
+                renderer: function(v){
+                    return filter(v);
+                }
+			},
+			{
+				text: '智能分析',
+				width:60,
+				dataIndex: "note",
+				renderer:function(dd, index, data){
+               
+								//console.log(dd,index,data);
+								if("" == dd || typeof dd == "undefined"){
+									return "---";
+								}
+								
+								var addHTMl = "";
+								addHTMl += "<div class=\"dhcp-client-bind2\" data-index="+ index +">";
+								
+								addHTMl += "<a style=\"color:blue\"; href=\"#\">" + dd + "</a>";	
+								//addHTMl += "<span class=\"icon\"></span>";
+								//addHTMl += "<sapn class=\"add\">" + $.su.CHAR.DHCP.BIND + "</span>";
+								addHTMl += "</div>";
+								return addHTMl;					
+									
+							
+							}		
+			}
+		],
+		operation: [{
+			xtype: "totalCount",
+			cls: "left",
+			fieldLabel: $.su.CHAR.IP_STATS.ENTRY_NUM
+		},"refresh","search"]
+	}).delegate('div.dhcp-client-bind', 'click', function(e){
+        var index = $(this).data("index");
+        var linedata = ip_grid.grid("getStore").data[index];  
+        
+        //alert(linedata.addr);
+        window.open("index.html?atk-log&sip="+linedata.addr,"_blank");
+        //document.getElementById('preview-frame').contentDocument.location.href = linedata.time;
+        //document.getElementById('preview-frame').contentDocument.location.href = "/detail-"+linedata.detail+'.txt';
+        //$frameMsg.msg("show");
+        return;
+             
+    }).delegate('div.dhcp-client-bind2', 'click', function(e){
+             
+        var index = $(this).data("index");
+        var linedata = ip_grid.grid("getStore").data[index];   
+        
+        window.open("index.html?trace-log&sip="+linedata.addr,"_blank");
+        //location.href = "index.html?trace-log&sip="+linedata.addr;
+        return;
+      
+     
+    });
+
+
+    var dataIndex = "tx_bps";
+    var order = "down";
+    function dataSort(x, y) {
+        if(order == "down"){
+            if(dataIndex == "addr"){
+                var xip = $.su.func.ipToInt(x[dataIndex]);
+                var yip = $.su.func.ipToInt(y[dataIndex]);
+                if (xip > yip) {
+                    return -1;
+                }else if (xip < yip) {
+                    return 1;
+                }
+            }else{
+                if (parseInt(x[dataIndex]) > parseInt(y[dataIndex])) {
+                    return -1;
+                }else if (parseInt(x[dataIndex]) < parseInt(y[dataIndex])) {
+                    return 1;
+                }
+            }
+        }else{
+            if(dataIndex == "addr"){
+                var xip = $.su.func.ipToInt(x[dataIndex]);
+                var yip = $.su.func.ipToInt(y[dataIndex]);
+                if (xip > yip) {
+                    return 1;
+                }else if (xip < yip) {
+                    return -1;
+                }
+            }else{
+                if (parseInt(x[dataIndex]) > parseInt(y[dataIndex])) {
+                    return 1;
+                }else if (parseInt(x[dataIndex]) < parseInt(y[dataIndex])) {
+                    return -1;
+                }
+            }
+        }
+    }
+
+    ip_grid.delegate("th.grid-header-1", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "addr";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+
+    /*ip_grid.delegate("th.grid-header-2", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "tx_bps";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });*/
+    
+        ip_grid.delegate("th.grid-header-5", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "time";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+
+    ip_grid.delegate("th.grid-header-6", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "rx_bps";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+    ip_grid.delegate("th.grid-header-7", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "tx_pps";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+    ip_grid.delegate("th.grid-header-8", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "rx_pps";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+
+    ip_grid.delegate("th.grid-header-9", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "tx_bytes";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+    ip_grid.delegate("th.grid-header-10", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "rx_bytes";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+
+    ip_grid.delegate("th.grid-header-11", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "tx_pkts";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+    ip_grid.delegate("th.grid-header-12", "click", function(e){
+        var store = ip_grid.grid("getStore");
+        var data = store.data;
+        dataIndex = "rx_pkts";
+        store.loadData(data.sort(dataSort));
+        $("th.grid-header").removeClass("up").removeClass("down");
+        var me = $(this);
+        if(order == "down"){
+            me.addClass("down"); 
+            me.removeClass("up");
+            order = "up";
+        }else{
+            me.addClass("up");
+            me.removeClass("down");
+            order = "down";
+        }
+    });
+
+    var sortIcon = "<span class=\"column-sort\"></span>";
+    $("th.grid-header").css({
+        "color": "#67AEF7",
+        "cursor": "pointer"
+    }).append(sortIcon);
+
+
+function abc() {
+	      var store = ip_grid.grid("getStore");
+        var data = store.data;
+        //dataIndex = "tx_pkts";
+        dataIndex = "rx_bytes";
+        store.loadData(data.sort(dataSort));
+       // alert("shist");
+	
+	
+}
+
+setTimeout(abc,500);
+
+
+
+	var ip_stats_help = new $.su.Help({
+		container: "div#ip_stats_help",
+		content: ["IP_STATS_SETTING", "IP_STATS_LIST"]
+	});
+});
+</script>
+</body>
+
+</html>

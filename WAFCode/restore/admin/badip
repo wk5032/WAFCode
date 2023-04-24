@@ -1,0 +1,8 @@
+{
+	"id": 1,
+	"others": {
+		"max_rules": 30
+	},
+	"result": [{"ipaddr":"1.1.1.1/32","enabled":"off"}],
+	"error_code": "0"
+}

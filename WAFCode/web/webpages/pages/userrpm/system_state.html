@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>action_check</title>
+	<style type="text/css">
+	</style>
+</head>
+
+<body>
+	<div class="func-container">
+		<div id="action_check">
+	
+		</div>
+		
+	</div>
+	<div id="help"></div>
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){ 
+	var actionCheck_proxy = new $.su.Proxy({
+		url:$.su.url('/admin/logger?form=action_check')
+	})
+
+location.href = "/webroot/html/index/homepage.html";
+	$("div#action_check").panel({
+		title: "正在跳转攻击态势,首次下载地图需要几秒......",
+		collapsible: false,
+		help:$("#help")
+	});
+
+
+
+});
+</script>
+</body>
+
+</html>

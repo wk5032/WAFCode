@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>jsTree test</title>
+  <!-- 2 包含主题模板CSS文件 -->
+  <link href="../../dist/jstree/themes/default/style.min.css" rel="stylesheet" />
+</head>
+<body>
+  <!-- 3 设置容器元素 -->
+  <div id="jstree">
+    <!-- 在本例中，树是从内联HTML填充的 -->
+    <ul>
+      <li>
+        根节点 1
+        <ul>
+          <li id="child_node_1">子节点1</li>
+          <li>子节点2</li>
+        </ul>
+      </li>
+      <li>根节点 2</li>
+    </ul>
+  </div>
+  <button>演示按钮</button>
+
+  <!-- 4 包含jQuery库 -->
+  <script src="../../docs/assets/plugins/jquery/jquery.min.js"></script>
+
+
+  <!-- 5 包括缩小的jstree源文件 -->
+  <script src="../../dist/jstree/jstree.min.js"></script>
+
+  <script>
+  $(function () {
+    // 6 当DOM准备好时创建一个实例
+    //$('#jstree').jstree();
+    $('#jstree').jstree({
+      "plugins": ["wholerow", "checkbox"]
+    });
+    // 7 绑定到树上触发的事件
+    $('#jstree').on("changed.jstree", function (e, data) {
+      console.log(data.selected);
+    });
+    // 8 与树交互-任何一种方式都可以
+    $('button').on('click', function () {
+      $('#jstree').jstree(true).select_node('child_node_1');
+      $('#jstree').jstree('select_node', 'child_node_1');
+      $.jstree.reference('#jstree').select_node('child_node_1');
+    });
+  });
+  </script>
+</body>
+</html>

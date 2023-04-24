@@ -1,0 +1,7 @@
+#------------------------------#是注释，去掉最前面的#表示开启该行指令--------------------------------------------------
+#----------------测试规则，凡是URL、ARGS中含有select、delete等关键字视为SQL注入----------------------------------------
+
+#MainRule "rx:select|union|update|delete" "msg:sql keywords" "mz:BODY|URL|ARGS|$HEADERS_VAR:Cookie" "s:$SQL:4" id:1000;
+
+
+

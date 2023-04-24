@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>MAC Filtering</title>
+<style type="text/css">
+</style>
+</head>
+
+<body>
+<div class="func-container">
+	
+  	<div class="func-machine">
+		<div id="action_check">
+			<form id="action_form">
+				<input id="enable" name="enable" value=""/>
+				<input id="conn" name="conn" value=""/>	
+				<input id="rate" name="rate" value=""/>		
+				<input id="area" name="area" value=""/>		
+			</form>
+		</div>		
+	</div>
+	
+
+    <div id="own_editor">
+            
+        <input id="textname" name="textname" > 
+        <input id="url" name="url" >       
+            
+    </div>
+
+    <div id="mac_filtering_rule_list">
+        <div id="mac_filtering_rule_grid">
+        </div>
+    </div>
+
+    <div id="mac_filtering_help"></div>
+</div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+ 
+    var actionCheck_proxy = new $.su.Proxy({
+		url:$.su.url('/admin/ddos?form=action_check')
+	 });
+	 
+	 $("div#action_check").panel({
+		title: "仅遭受攻击战时启动以缓解DDOS攻击",
+		collapsible: false,
+		help:$("#help")
+	}); 
+	
+	
+	$("#enable").switchbutton({
+		fieldLabel:"开启DDOS防御设置"
+	});
+	
+	$("#conn").textbox({
+		fieldLabel:"限制每个IP的连接数",
+		inputCls: 's',
+		allowBlank:true,
+		maxLength:3,
+    tips:"（通常设置为10-20）"
+	});
+	
+	$("#rate").textbox({
+		fieldLabel:"限制5秒内的访问速率",
+		inputCls: 's',
+		allowBlank:true,
+		maxLength:3,
+    tips:"（通常设置为20-50）"
+	});
+	
+	$("#area").switchbutton({
+		fieldLabel:"开启禁止境外IP访问"
+	});
+	
+	$("#action_form").form({
+		autoLoad:true,
+		proxy: actionCheck_proxy,
+        fields: [
+            {name: "enable", mapping: "enable"},
+			      {name: "conn", mapping: "conn"},
+			      {name: "rate", mapping: "rate"},
+			      {name: "area", mapping: "area"}
+        ],
+        submitBtn: "default"
+	});	
+	
+	
+		
+
+
+    var helpMacFiltering = new $.su.Help({
+        container: "div#mac_filtering_help",
+        content: ["NOTHING_CONFIG"]
+    });
+
+});
+</script>
+</body>
+
+</html>

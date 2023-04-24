@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>MAC Filtering</title>
+<style type="text/css">
+</style>
+</head>
+
+<body>
+<div class="func-container">
+    <div id="func_setting">
+        <form id="mac_filtering_settings">
+            <input id="mac_filtering_enable" name="enable" value=""/>
+            <input id="mac_filtering_mode" name="filter_mode" value=""/>
+            <input id="interfaces" name="interfaces" value=""/>
+        </form>
+    </div>
+
+    <div id="own_editor">
+            
+        <input id="textname" name="textname" > 
+        <input id="mac" name="mac" >
+        <input id="http_port" name="http_port">
+            
+    </div>
+
+    <div id="mac_filtering_rule_list">
+        <div id="mac_filtering_rule_grid">
+        </div>
+    </div>
+
+    <div id="mac_filtering_help"></div>
+</div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+    var URL_ENABLE = $.su.url('/admin/mac_filter?form=enable'),
+        URL_MODE = $.su.url('/admin/mac_filter?form=mode'),
+        URL_RULE_LIST = $.su.url("/admin/mac_filter?form=mac_list");
+
+    $("#func_setting").panel({
+        title: $.su.CHAR.MAC_FILTERING.SETTINGS,
+        collapsible: false,
+        help: $("#mac_filtering_help")
+    });
+
+/*    $("#mode_setting").panel({
+        title: $.su.CHAR.MAC_FILTERING.MODE_SETTINGS,
+        collapsible: false
+    });*/
+
+    $("#mac_filtering_mode").combobox({
+        fieldLabel: $.su.CHAR.MAC_FILTERING.MODE,
+        //columns: 1,
+        //cls: 'part-seperate',
+        items:[
+            { name:$.su.CHAR.MAC_FILTERING.WHITE_MODE, value:'white',selected:true},
+            { name:$.su.CHAR.MAC_FILTERING.BLACK_MODE, value: 'black'}
+        ]
+    });
+
+    var tarContainer = $.find("div.radio-group-container");
+    var tarLabel = $(tarContainer).find("div.widget-fieldlabel-wrap");
+    $(tarLabel).hide();
+
+
+    $("#mac_filtering_enable").switchbutton({
+            fieldLabel: $.su.CHAR.MAC_FILTERING.ENABLE_FILTERING
+    }).on("ev_change", function(e, oldValue, newValue){
+        var val = (newValue[0]=="enable"||newValue[0]=="on") ? "on" : "off";
+        switch(val)
+        {
+            case "on":
+                $("#mac_filtering_mode").combobox("enable");
+                $("#interfaces").combobox("enable");
+                $("#interfaces").combobox("setValue", "LAN");
+                break;
+            case "off":
+                $("#mac_filtering_mode").combobox("disable");
+                $("#interfaces").combobox("disable");
+                break;
+        }
+    });
+
+    $("#interfaces").combobox({
+        fieldLabel:"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp"+$.su.CHAR.ACCESS_CONTROL.ZONE,
+        multiSelect:true,
+        items:[
+            {name:"LAN",value:"LAN"}
+        ]
+    }).combobox("hide");
+    /*
+    var interfaceItem=[];
+    var interfaceProxy = new $.su.Proxy({
+            url: $.su.url('/admin/interface?form=status'),
+            async: false
+    });     
+    interfaceProxy.read({}, function(data){                     
+                var i
+                for (i=0; i<data.normal.length; i++){
+                    interfaceItem.push({name:data.normal[i].t_name,value:data.normal[i].t_name});           
+                }
+                var combobox = $('#interfaces');
+                combobox.combobox('loadData',interfaceItem); 
+    });
+*/
+
+    var modeProxy = new $.su.Proxy({
+        url: URL_MODE
+    });
+
+    $("#mac_filtering_settings").form({
+        proxy: modeProxy,
+        fields: [
+            {name: "enable", mapping: "enable"},
+            {name: "filter_mode", mapping: "filter_mode"},
+            {name: "interfaces",mapping: "interfaces"}
+        ],
+        submitBtn: "default",
+        validator: function(){
+            var interfaces = $("#interfaces").combobox("getValue");
+            var enable = $("#mac_filtering_enable").checkbox("getValue");
+            if (enable[0] == "enable" && interfaces.length == 0){
+                if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                    var NO_INTERFACE_SELECT = 17000;
+                    $.su.app.errorOperation.denied(NO_INTERFACE_SELECT);
+                    return false;
+                }
+            }
+            return true;
+        }
+    });
+
+
+    var textname = $("#textname").textbox({
+        fieldLabel: $.su.CHAR.NAPT.NAME,
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:28,
+        tips:"（1-28个字符）"
+    });
+
+    var mac = $("#mac").textbox({
+        fieldLabel: $.su.CHAR.MAC_FILTERING.MAC,
+        textFormat: $.su.format.ip,
+		    allowBlank: false,
+		    vtype: {
+            vtype: "ip",
+            allowAllZeroFlag: true
+        }     
+    });
+    
+    
+    var http_port = $("#http_port").textbox({
+		fieldLabel: $.su.CHAR.ACCOUNT_CONFIG.HTTP_PORT,
+		cls: "l",
+		allowBlank: false,
+		tips: "(80、1-65535)",
+		validator: function(v){		   
+			{
+			    return (new $.su.vtype({
+			    	vtype: "number",
+			    	min: 1,
+			    	max: 65535,
+			    	validator:function(value){
+			    		if(value < this.min || value > this.max){
+			    			return "请输入80或者1024-65535之间的数字";
+			    		}else{
+			    			return true;
+			    		}
+			    	}
+			    }).validate(v));
+			}
+            
+        }
+	});
+
+	$("#mac_filtering_rule_list").panel({
+		title: $.su.CHAR.MAC_FILTERING.RULE_LIST,
+		collapsible: false
+	});
+
+	var ruleListProxy = new $.su.Proxy({
+		url: URL_RULE_LIST
+	});
+
+
+	var ruleGrid = $("#mac_filtering_rule_grid").grid({
+        editor: {
+            content:"#own_editor",
+            fields: [
+                {name: "textname"},
+                {name: "mac"},
+                {name: "http_port"}
+            ]
+        },
+		store:{
+			proxy: ruleListProxy,
+			fields: [
+			        	{name: "textname"},
+                {name: "mac"},
+                {name: "http_port"}
+			],
+			autoLoad: true
+		},
+        paging:[],
+		columns: [
+			/*{
+				xtype: "checkcolumn",
+				width: $.su.CHAR.SETTING.MAC_FILTERING.CHECK_COLUMN_WIDTH
+                //width:80
+			},*/
+			{
+				xtype: "rownumberer",
+				width: $.su.CHAR.SETTING.MAC_FILTERING.ROW_NUMBER_WIDTH
+                //width:80
+			},
+			{
+				text: $.su.CHAR.NAPT.NAME,
+				width: $.su.CHAR.SETTING.MAC_FILTERING.NAME_WIDTH,
+               // width:150,
+				dataIndex: "textname",
+                xtype:"comment"
+			},
+            {
+                text: $.su.CHAR.MAC_FILTERING.MAC,
+                width: $.su.CHAR.SETTING.MAC_FILTERING.COMMENT_WIDTH,
+                dataIndex: "mac"
+            },
+            {
+                text: $.su.CHAR.MAC_FILTERING.MAC,
+                width: $.su.CHAR.SETTING.MAC_FILTERING.COMMENT_WIDTH,
+                dataIndex: "http_port"
+            },
+            {
+                xtype: "settings",
+                width: $.su.CHAR.SETTING.MAC_FILTERING.SETTING_WIDTH
+               // width:120
+            }
+		],
+		operation: 'prompt|add|delete'
+	}).on("ev_load", function(e,data, others){
+			if(others)/* 閫氳繃json閲岀殑others鍙傛暟浼犻€掑姩鎬侀榾鍊?*/
+			{
+				/*淇濈暀涓嶇敤*/
+				//console.log(others.max_rules);
+                maxrules = others.max_rules;
+			}
+		});
+		
+		$("input#mac_filtering_enable").switchbutton("hide");
+
+    var helpMacFiltering = new $.su.Help({
+        container: "div#mac_filtering_help",
+        content: ["MAC_FILTERING_SETTING", "MAC_FILTERING_LIST"]
+    });
+
+});
+</script>
+</body>
+
+</html>

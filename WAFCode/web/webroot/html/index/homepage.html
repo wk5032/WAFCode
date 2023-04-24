@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh" class="page-map">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" >
+	<title></title>
+	<link rel="shortcut icon" type="image/x-icon" href="../../images/logo.ico" />
+	<link href="../../css/bootstrap.css" rel="stylesheet" />
+	<link href="../../css/public.css" rel="stylesheet" />
+	<link href="../../css/history.css" rel="stylesheet" />
+	<script src="../../js/jquery-1.11.0.min.js"></script>
+	<script src="../../js/roleValidate.js"></script>
+	<script src="../../js/jquery.cookie.js"></script>
+	<script src="../../js/bootstrap.min.js"></script>
+	<script src="../../js/prefixfree.min.js"></script>
+	<script src="../../js/echarts/echarts.min.js"></script>
+	<script src="../../js/echarts/world4.js"></script>
+	<script src="../../js/echarts/china.js"></script>
+	<script type="text/javascript" src="../../js/i18n/jquery.i18n.properties-min-1.0.9.js"></script>
+	<script src="../../js/i18n/common.js"></script>
+	<script src="../../js/main.js"></script>
+	<!-- 滚动条js -->
+	<script src="../../js/scrollbar/jquery.mCustomScrollbar.concat.min.js"></script>
+	<script src="../../js/scrollbar/jquery.mousewheel.min.js"></script>
+	<link rel="stylesheet" href="../../js/scrollbar/jquery.mCustomScrollbar.min2.css" />
+	<script src="../../js/dialog/dialog.js"></script>
+	<script src="../../app/index/homepage.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+            $(".event-pie-bor").css('height', $(".event-pie-bor").width()+'px');
+            //地图宽度
+            $("#unfold-map").css("width",$(window).width());
+            //地图高度
+            $("#unfold-map").css("height", $(window).height()+(-50)+'px');
+            //大地图底部宽度
+            if($('.homepage').height()<910){
+                $('#event-bottom').css('width', $(window).width()-320+'px');
+            }else{
+                $('#event-bottom').css('width', $(window).width()+'px');
+            }
+            $(window).resize(function() {
+                if($('.homepage').height()<910){
+                    $('#event-bottom').css('width', $(window).width()-320+'px');
+                }else{
+                    $('#event-bottom').css('width', $(window).width()+'px');
+                }
+                var maxLiCount = parseInt($('#alarmUl').width()/60);
+                var currentLiCount = $('#alarmUl>li').length;
+                if (currentLiCount > maxLiCount) {
+                    for (var i = currentLiCount-maxLiCount; i > 0; i--) {
+                        $($('#alarmUl>li')[0]).remove();
+					}
+				}
+            });
+            //滚动条加载
+			$(".tab-pane").mCustomScrollbar({
+				autoHideScrollbar: true
+			});
+        });
+
+		$(function () {
+			/* if('1'==$.cookie('forword_in'))
+			{
+				window.location.href = "../../logout";
+			}
+			$.ajax({
+				url: '../../license/status',
+				success: function(data) {
+					if(data == 'invalid'){
+						//跳转到授权页面
+						window.location.href = '../userLicense.html';
+					}
+				},
+				cache: false
+			}); */
+
+
+			//全局Ajax异常控制
+			$( document ).ajaxError(function( event, request, settings, exception) {
+				if (request.status === 403) {
+					top.window.location.href = 'login.html';
+				}
+			});
+
+			$.get('../../users/mode',function(data){
+				mode = parseInt(data.split(',')[0]);
+				role = parseInt(data.split(',')[1]);
+				if(role == 0){//系统管理员
+					$("#nav_homepage li").each(function(index,element){
+	            	     if(index!=4)
+	           	    	 {
+	            	    	 $(this).css("display","none");
+	           	    	 }
+	            	  });
+	            	$("#nav_homepage").css("display","block");
+					$("#nav_config").css("display","block");
+					$("#nav_system").css("display","block");
+					$("#sys_info").css("display","none");
+
+				}else if(role == 1){//审计员
+					$("#nav_system").css("display","block");
+					$("#sys_service").css("display","none");
+					$("#sys_license").css("display","none");
+
+				}else if(role == 2){//操作员
+					$("#nav_homepage").css("display","block");
+					$("#nav_attack").css("display","block");
+                    $("#nav_visualized").css("display","block");
+					$("#nav_report").css("display","block");
+                    $("#nav_knowledge").css("display","block");
+				}else if(role == 3){ //超级管理员
+
+					$("#nav_homepage").css("display","block");
+					$("#nav_attack").css("display","block");
+                    $("#nav_visualized").css("display","block");
+					$("#nav_report").css("display","block");
+					$("#nav_config").css("display","block");
+					$("#nav_system").css("display","block");
+                    $("#nav_knowledge").css("display","block");
+
+				}else if(role == 4){//普通用户
+					$("#nav_homepage").css("display","block");
+					$("#nav_attack").css("display","block");
+                    $("#nav_visualized").css("display","block");
+					$("#nav_report").css("display","block");
+					$("#nav_config").css("display","block");
+					$("#nav_system").css("display","block");
+					$("#usermanage").css("display","none");
+					$("#nav_knowledge").css("display","block");
+				}
+				else if(role == 5){  //审计管理员
+					$("#nav_config").css("display","block");
+					$("#nav_config li").css("display","none");
+					$("#usermanage").css("display","block");
+
+				}
+			});
+
+			// 地图切换
+			$(".mapchoose span").each(function(i){
+				$(this).click(function(){
+					$(".mapchoose span").removeClass("current");
+					$(this).addClass("current");
+				});
+			});
+		});
+
+		function jump(url) {
+			$.cookie('top_tab', null, {path: "/"});
+			var currentUrl = window.location.href;
+			var prefix = currentUrl.substring(0, currentUrl.indexOf("/html/")+6);
+			window.location.href = prefix + url;
+		}
+	</script>
+	<style>
+		.history {
+			background: url(../../images/page/t520-line.png) repeat-y 20px 0px;
+			overflow: hidden;
+			position: relative;
+		}
+		.history-date ul li h4 { padding-left: 35px; color:#858a91;}
+		.history-date ul li dl {padding-left: 35px;}
+		.history-date ul li dl dt:first-child {color: #858a91; height: 35px; line-height: 35px;}
+		.history-date ul li dl dt {color: #858a91;}
+		.history-date ul li {
+			background: url(../../images/page/t520-point.png) no-repeat 15px 2px;
+			padding-bottom: 50px;
+			zoom: 1;
+		}
+
+		.tab-content,.event-top-list {
+			position:relative;
+		}
+		.tab-content>span,.event-top-list>span {
+			position:absolute;
+			padding:5px;
+			border-style: solid;
+			border-color: #73aefe;
+		}
+		.rowd1 {
+			border-width: 2px 0 0 2px;
+			top:0px;
+			left:0px;
+		}
+		.rowd2 {
+			border-width: 2px 2px 0 0;
+			top:0px;
+			right:0px;
+		}
+		.col1 {
+			border-width: 0 0 2px 2px;
+			bottom:0px;
+			left:0px;
+		}
+		.col2 {
+			border-width: 0 2px 2px 0;
+			bottom:0px;
+			right:0px;
+		}
+	</style>
+</head>
+
+<body class="homepage-map">
+<div class="homepage">
+	<div class="container" id="header"></div>
+	<div style="position:absolute; z-index:9999; top: 80px; left: 50%; margin-left: -70px;">
+		<div class="mapchoose">
+			<span class="current" onclick="getWorldConfig('world');" style="border-radius:20px 0 0 20px;">全球</span><span onclick="getWorldConfig('china');" style="border-radius:0 20px 20px 0;">中国</span><span id="provinceSpan" style="display: none; border-radius:0 20px 20px 0;"></span>
+		</div>
+	</div>
+	<div class="wrapper">
+		<div class="unfold-map" id="unfold-map"></div>
+		<div class="menu">
+			<!-- <h3 class="icon-menu" id="icon-menu"></h3> -->
+			<ul id="menu-con">
+				<li id="nav_homepage" style="display:none;" class="icon-menu menu01">
+					<ul class="submenu2" style="display:none;"><i class="icon-arrow-left"></i>
+						<li onclick="jump('index/homepage.html');"><a href="javascript:;">攻击态势图</a></li>
+						<li onclick="jump('../../webpages/index.html');"><a href="javascript:;">系统状态</a></li>
+						
+					</ul>
+				</li>
+				<li id="nav_attack" style="display:none;" class="icon-menu menu02">
+					<ul class="submenu2" style="display:none;"><i class="icon-arrow-left"></i>
+						<li onclick="jump('../../webpages/index.html?http-settings');"><a href="javascript:;">服务器设置</a></li>
+						<li onclick="jump('../../webpages/index.html?alarm-setting');"><a href="javascript:;">运行模式</a></li>
+						<li onclick="jump('../../webpages/index.html?mod-rule');"><a href="javascript:;">防护规则</a></li>
+						<li onclick="jump('../../webpages/index.html?white-black');"><a href="javascript:;">黑白名单</a></li>
+					</ul>
+				</li>
+				<li id="nav_visualized" style="display:none;" class="icon-menu menu03"  onclick="jump('../../webpages/index.html?atk-log');">					
+	       <ul class="submenu2" style="display:none;"><i class="icon-arrow-left"></i>
+						<li onclick="jump('../../webpages/index.html?atk-log');"><a href="javascript:;">攻击日志</a></li>			
+					</ul>
+				</li>
+				<li id="nav_report" style="display:none;" class="icon-menu menu04">
+					<ul class="submenu2" style="display: none;"><i class="icon-arrow-left"></i>
+						<li onclick="jump('../../webpages/index.html?ip-stat');"><a href="javascript:;">IP流量统计</a></li>
+						<li onclick="jump('../../webpages/index.html?atk-trend');"><a href="javascript:;">十日攻击趋势</a></li>
+						<li onclick="jump('../../webpages/index.html?atk-source');"><a href="javascript:;">十大攻击源</a></li>
+					</ul>
+				</li>
+				<li id="nav_config" style="display:none;" class="icon-menu menu05">
+					<ul class="submenu2" style="display: none;"><i class="icon-arrow-left"></i>
+						<li onclick="jump('config/rulebase.html');"><a href="javascript:;">规则库升级</a></li>
+						<li><a href="javascript:jump('config/config.html');">检测设置</a></li>
+						<li><a href="javascript:jump('config/network.html');">网络配置</a></li>
+						<li><a href="javascript:jump('config/proxywork.html');">网络代理配置</a></li>
+						<li><a href="javascript:jump('config/upload.html');">事件上传</a></li>
+						<li onclick="jump('config/asset.html');"><a href="javascript:;">资产配置</a></li>
+						<li id="usermanage"><a href="javascript:jump('config/usermanage.html');">用户管理</a></li>
+						<li id="sys_date"><a href="javascript:jump('config/date.html');">时间与日期</a></li>
+						<li onclick="jump('firewall/linkage.html');"><a href="javascript:;">防火墙联动</a></li>
+					</ul>
+				</li>
+				<li id="nav_system" style="display:none;" class="icon-menu menu06">
+					<ul class="submenu2" style="display: none;"><i class="icon-arrow-left"></i>
+						<li id="sys_service"><a href="javascript:jump('system/service.html');">系统维护</a></li>
+						<li id="sys_info"><a href="javascript:jump('system/info.html')">系统审计</a></li>
+						<li id="sys_license"><a href="javascript:jump('system/license.html');">License信息</a></li>
+					</ul>
+				</li>
+				<li id="nav_knowledge" style="display:none;" class="icon-menu menu07"  onclick="jump('../../webpages/index.html?remote');">
+				</li>
+			</ul>
+		</div>
+		<div class="event-top">
+			<div class="event-top-list" id="event-top-list01" style="width:570px;">
+				<span class="rowd rowd1"></span>
+				<span class="rowd rowd2"></span>
+				<span class="col col2"></span>
+				<span class="col col1"></span>
+				<h6>攻击信息<span id="event-list01" class="icon-list-down fr"></span></h6>
+				<ol id="event-des01">
+					<li style="list-style-image:url(../../images/page/disc10.png);" onclick="jumpWarn(1);">攻击总数<span id="s1Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc10.png);" onclick="jumpWarn(2);">高危数量<span id="s2Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc10.png);" onclick="jumpWarn(3);">IP封禁<span id="s3Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc10.png);" onclick="jumpWarn(4);">攻击国家<span id="s4Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc10.png);" onclick="jumpWarn(5);">访问流量<span id="s5Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc10.png);" onclick="jumpWarn(6);">IP总数<span id="s6Total">--</span></li>
+				</ol>
+			</div>
+			<br>		
+			
+			 <!--<div class="event-top-list" id="event-top-list02" style="width:570px;">
+				<span class="rowd rowd1"></span>
+				<span class="rowd rowd2"></span>
+				<span class="col col2"></span>
+				<span class="col col1"></span>
+				<h6>远程控制<span id="event-list02" class="icon-list-down fr"></span></h6>
+				<ol id="event-des02">
+					<li style="list-style-image:url(../../images/page/disc9.png);" onclick="jumpWarn(7);">主机控制行为<span id="s7Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc9.png);" onclick="jumpWarn(6);">网站控制行为<span id="s6Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc9.png);" onclick="jumpWarn(1);">异常IP数<span id="s3Total">--</span></li>
+				</ol>
+			</div> 
+			<br>-->
+			
+			<div class="event-top-list" id="event-top-list03" style="width:570px;">
+				<span class="rowd rowd1"></span>
+				<span class="rowd rowd2"></span>
+				<span class="col col2"></span>
+				<span class="col col1"></span>
+				<h6>系统状态<span id="event-list03" class="icon-list-down fr"></span></h6>
+				<ol id="event-des03">
+					<li style="list-style-image:url(../../images/page/disc8.png);" onclick="jumpWarn(7);">CPU占比<span id="s7Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc8.png);" onclick="jumpWarn(8);">内存占比<span id="s8Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc8.png);" onclick="jumpWarn(9);">磁盘占比<span id="s9Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc8.png);" onclick="jumpWarn(10);">服务器数<span id="s10Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc8.png);" onclick="jumpWarn(11);">规则数量<span id="s11Total">--</span></li>
+					<li style="list-style-image:url(../../images/page/disc8.png);" onclick="jumpWarn(12);">工作状态<span id="s12Total"><font color="red">异常</font></span></li>
+				</ol>
+			</div>
+		</div>
+		<div style="position:absolute; z-index:9999; top:85px; left:95px;">
+			<div id="timechoose" class="timechoose">
+				<input class="current" type="button" value="当天" style="border-radius:2px 0px 0px 2px"/><input type="button" value="一周" style="border-radius:0px 2px 2px 0px;"/>
+			</div>
+			<div id="nowTime1" style="color:#a6cddc; font-size:12px;"></div>
+		</div>
+		<a id="Pinchcut" class="Pinchcut2" data-attr="Pinchlf" href="javascript: void(0);" ></a>
+		<div class="event-side" style="cursor: ew-resize;" id="box">
+			
+			<div class="event-side-con" id="event-side-con" style="height:auto;background:none; cursor: default;">
+				<div class="row">
+					<ul class="nav nav-tabs" id="nav-tabs-prime">
+						<li class="active" onclick="getTopN(1, this);"><a href="javascript: void(0);">十大攻击源</a></li>
+						<li onclick="getTopN(2, this);"><a href="javascript: void(0);">十大攻击类型</a></li>
+						<li onclick="getTopN(3, this);"><a href="javascript: void(0);">今日访问</a></li>
+					</ul>
+				</div>
+				<div class="tab-content">
+					<span class="rowd rowd1"></span>
+					<span class="rowd rowd2"></span>
+					<span class="col col2"></span>
+					<span class="col col1"></span>
+					<div class="tab-pane tabHih active" id="topNTabPane1">
+						<div class="tab-table">
+							<h3><span></span>攻击源</h3>
+							<table id="topNAsip">
+								<thead>
+									<tr><th>地址/类型</th><th>攻击次数</th><th>国家</th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+						<!--<div class="tab-table">
+							<h3><span></span>被攻击地址</h3>
+							<table id="topNAdip">
+								<thead>
+									<tr><th>IP</th><th>关联IP数</th><th>国家</th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>-->
+						<div class="tab-table">
+							<h3><span></span>攻击来源</h3>
+							<table id="topNCountry">
+								<thead>
+									<tr><th>国家/省</th><th>攻击次数</th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+					<div class="tab-pane tabHih" id="topNTabPane2">
+						<div class="tab-table">
+							<h3><span></span>IP列表</h3>
+							<table id="topNReqip">
+								<thead>
+									<tr><th>源IP地址</th><th>请求/攻击数</th><th>国家</th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+							<!--	<table id="topNResip">
+								<thead>
+									<tr><th>目的IP</th><th>关联IP数</th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>-->
+						</div>
+					<!--	<div class="tab-table">
+							<h3><span></span>DGA检测</h3>
+							<table id="topDGA">
+								<thead>
+									<tr><th>域名</th><th>查询次数</th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+						<div class="tab-table">
+							<h3><span></span>未知文件-攻击源地址</h3>
+							<table id="topNAsipFile">
+								<thead>
+									<tr><th>地址</th><th>攻击次数</th><th>国家</th></tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div> -->
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			/** 
+			 移动得距离就为点击位置坐标（clientX） - 移动后的位置坐标（clientX），
+			 那么现在盒子总共的宽度就是其本身宽度（oBox.offsetWidth）加上前面坐标之差。
+			 向左拉伸原理差不多，就是多加个改变盒子的位置,盒子的offsetLeft等于光标移动后的位置坐标。
+			 我们对盒子就行绝对定位，获取它的left值，将它left值减去改变的距离，他就会向左边拉伸了。上下同理
+			**/
+			var oBox = document.getElementById('box');
+			oBox.onmousedown = function(e){
+				e = e ||event;
+				var x = e.clientX;
+				var y = e.clientY;
+				var oBoxL = oBox.offsetLeft;
+				var oBoxW = oBox.offsetWidth;
+				//var oBoxT = oBox.offsetTop;
+				//var oBoxH = oBox.offsetHeight;
+
+				var d = 0;
+				if(x < oBoxL + 10){
+					d = 'left';
+				}
+			  
+				document.onmousemove = function(e){
+					e = e ||event;
+					var xx = e.clientX;
+					var yy = e.clientY;
+					//xx <= document.documentElement.clientWidth;
+					if(d == 'left'&&oBoxW + x -xx>350&&oBoxW + x -xx<700){
+					
+						oBox.style.width = oBoxW + x -xx + 'px'
+						oBox.style.left = xx  + 'px';
+					}
+					
+				   
+					return false;
+				}
+				document.onmouseup = function(){
+					document.onmousemove = null;
+					document.onmouseup = null;
+				}
+				if(e.preventDefault){
+					e.preventDefault();
+				}
+			}
+			
+		</script>
+		<div class="event-bottom" id="event-bottom" >
+			<div class="event-bottom-bg" id="event-bottom-bg"></div>
+			<div class="event-bottom-former" id="event-bottom-former">
+				<h5>实时告警 <span id="event-list04" class="icon-list-down fr"></span></h5>
+				<div class="risk">
+					<h3></h3>
+					<ul id="alarmUl">
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

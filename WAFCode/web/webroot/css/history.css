@@ -1,0 +1,13 @@
+
+/*history*/
+.history { background:url(../images/t520-line.png) repeat-y 20px 0px; overflow:hidden; position:relative;}
+.history-date { overflow:hidden;}
+.history-date ul {margin:0px; padding:0px;}
+.history-date ul li { background:url(../images/t520-point.png) no-repeat 15px 2px; padding-bottom:50px; zoom:1; }
+.history-date ul li.last { padding-bottom:0;}
+.history-date ul li:after{content:" "; display:block; height:0; clear:both; visibility:hidden;}
+.history-date ul li h4 {padding-left:30px;color:#777; font-size:14px;}
+.history-date ul li dl {margin:0px;padding-left:30px;margin-top:20px;}
+.history-date ul li dl dt {color:#777; font-size:14px; font-weight:normal;line-height:25px; }
+.history-date ul li dl dt:first-child{color:#777;height:35px;line-height:35px;}
+.history-date ul li dl dt:first-child span{font-weight:bold;}

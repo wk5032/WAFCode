@@ -1,0 +1,1148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+<link rel="shortcut icon" href="favicon.ico"/>
+<link type="text/css" href="css/widget.css" rel="stylesheet" />
+
+<link type="text/css" href="themes/neoteric/css/widget.css" rel="stylesheet" />
+<link type="text/css" href="themes/neoteric/css/style.css" rel="stylesheet" />
+
+<!--[if lte IE 8]>
+<meta http-equiv="X-UA-Compatible" content="IE=8" />
+<link href="themes/old/neoteric/ie.css" rel="stylesheet" type="text/css" />
+<![endif]-->
+
+<title>Opening...</title>
+</head>
+<body>
+<noscript>
+	<meta http-equiv="refresh" content="0; url=error.html"/>
+</noscript>
+
+<!--主界面-->
+<!--顶部颜色条-->
+<div class="top-banner">
+	<div class="middle-wrap">	
+		<div class="control">
+			<div class="logout">
+				<span class="icon"></span>
+				<span class="text"></span>
+			</div>
+			<div class="user">
+				<span class="icon"></span>
+				<span class="text"></span>
+			</div>
+		</div>
+		
+		<a href="http://www.hihttps.com" target="_blank">
+			<div class="top-banner-logo"></div>
+		</a>
+
+		<div class="product-info">
+			<h1>|</h1>
+			<div id="product-type"></div>
+		</div>
+
+	</div>
+</div>
+
+<div class="user-info" style="display:block;">
+    <div class="middle-wrap">
+        <a class="top-control-btn" id="top-control-unknown-ap" href="javascript:void(0);" title="点击查看不支持的AP型号列表">
+            <span id="unknown-ap" class="text"></span>
+        </a>
+    </div>
+</div>
+<div id="link-detail-window" style="max-height:520px;overflow:auto;display:none">
+	<table id = "link-detail-model-header" class="link-detail-table detail" style='background-color:#fafafa'>
+		<tr><td class='detail-key' style='text-align:center;width:80px;border:1px solid #d9d9d9;'>序号</td><td class='detail-value' style='text-align:center;border:1px solid #d9d9d9;width:350px'>AP型号</td></tr>
+	</table>
+	<table id = "link-detail-model" class="link-detail-table detail">
+	</table>
+</div>
+
+<div class="middle-wrap" style="min-width:1380px">
+	<div class="main-wrap">
+		<ul id="ul-nav" style="display:none;">
+			<li>
+				<div class="nav-wrap">
+					<a class="nav" name="advanced" href="pages/frame/advanced.html"></a>
+				</div>
+			</li>
+		</ul>
+
+		<div class="tab-menu-wrapper">
+	        <div id="tab-menu" class="tab-menu">
+	        </div> 
+	    </div>	
+
+
+		<div class="top-content">
+			<div class="top-content-wrap" id="top-content"></div>
+		</div><!-- top-content -->
+		
+
+<!--遮蔽层-->
+<div id="mask" class="mask"></div>
+<!--loading-->
+
+
+<!-- 在线升级 -->
+<div id="cloud_upgrade_alert_cnt" class="hidden warning" style="width:550px">
+	<div id="cloud_confirm_cnt">
+		<h4 class="title"  style="width:486px;text-align:center;margin:15px 0px">
+	 		<span class="text" id="cloud_confirm_content" style="font-size:28px">软件升级提示</span>
+		</h4>
+    	<div style="width:486px;text-align:center">
+        	<span class="text" style="font-size:12px">发现新的软件版本，建议立即升级</span>
+    	</div>
+    </div>
+	<div id="upgrade_note" style="margin:16px 0px;vertical-align:middle">
+	 	<hr style="margin:15px 0px"/>
+        <div style="width:174px;margin:10px 0px">
+            <label style="font-size:13px">新版软件更新说明:</label>
+        </div>
+        <div style="width:486px;margin:10px 0px;vertical-align:middle">
+            <span id="upgrade_text" style="font-size:12px">
+            </span>
+        </div>
+    </div>
+    <div id="upgrade_warm" style="width:486px">
+        <label style="font-size:12px">注意事项:   软件升级过程中不能关闭设备电源，否则将造成设备损坏，升级成功之后将自动重启。</label>
+    </div>
+</div>
+
+<div id="cloud_upgrade_cnt" class="hidden warning">
+	 <div id="cloud_upgrade_bar_cnt" class="reboot-loading-msg hidden">
+	 	<p id="cloud_note" class="reboot-progressbar-text"></p>
+	    <input id="cloud_pro_bar" type="text"/>
+		<input id="cloud_pro_bar_reboot" type="text"/>
+	</div>
+</div> 
+
+<div id="cloud_upgrade_failed_cnt" class="hidden warning">
+	<h4 class="title" id="cloud_upgrade_failed">
+		<span class="icon" ></span>
+		<span class="text" id="cloud_error_str"></span>
+	</h4>
+</div> 
+
+
+<!-- 登出的确认 -->
+
+<div id="logout_confirm_msg" class="hidden warning">
+	<div class="reboot-confirm-qa">
+		<h4 class="title">
+			<span class="icon"></span>
+			<span class="text" id="logout_confirm_msg_text"></span>
+		</h4>
+	</div>
+</div>
+
+<!-- 用户账户修改 -->
+<div id="user-modify-msg" class="hidden warning">
+	<form id="user-modify-form">
+		<input type="text"  id="old_acc" name="old_acc" value="" />
+    	<input type="password"  id="old_pwd" name="old_pwd" value="" />
+		<input type="text"  id="new_acc" name="new_acc" value="" />
+    	<input type="password"  id="new_pwd" name="new_pwd" value="" />
+		<input type="password"  id="cfm_pwd" name="cfm_pwd" value="" />
+		<input id="pwd_status"  value="" />
+	</form>
+	<button type="button" id="user-modify-btn"></button>
+</div>
+
+<!-- 快速配置对话框 -->
+<div id="wizard-msg">
+    <div id="wizard-form"></div>
+</div>
+
+<!--全局警告提示框-->
+<div id="global-warning-msg" class="hidden warning">
+	<h4 class="title">
+		<span class="icon"></span>
+		<span class="text" id="global-warning-text"></span>
+	</h4>
+</div>
+</div>
+</div>
+
+
+<!--
+以下是js部分
+-->
+
+<!--  jquery框架加载  -->
+<script type="text/javascript" src="js/libs/jquery-su.min.js"></script>
+
+<!--  语言部分加载  -->
+<script type="text/javascript" src="js/su/locale.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+	try{
+		$.su.locale.URL_LAN_CHECK = $.su.url("/locale?form=lang");//"./data/lan.json";
+		$.su.locale.get();
+	}catch(error){
+		location.href = "./error.html";
+	};
+//]]>
+</script>
+
+<!--  引入框架代码， 最后需要统一到一个文件下面  -->
+<script type="text/javascript" src="js/libs/encrypt.js"></script>
+<!--<script type="text/javascript" src="js/su/su.full.min.js"></script>-->
+<script type="text/javascript">
+$("head").append('<script type="text/javascript" src="js/su/su.full.min.js"><\/script>');
+</script>
+
+
+
+<!--  运行时代码  -->
+<script type="text/javascript">
+//<![CDATA[
+$(document).ready(function(e){
+	/*加载产品信息*/
+	var MODEL_NAME = $.su.locale.model;
+	var MODEL_DESC = MODEL_NAME.match(/[^ ]*/);
+	if(typeof MODEL_DESC != "string"){
+		MODEL_DESC = MODEL_DESC[0];
+	}
+	document.title = MODEL_DESC;
+	$("#product-type").html(MODEL_DESC);
+
+//页面标题
+$(".logout span.text").text($.su.CHAR.INDEX.LOGOUT);
+$(".user span.text").text($.su.CHAR.INDEX.USER);
+
+//获得token
+try{
+	$.su.url.stok = localStorage.getItem("token") || (function(){
+		var stok = "12345",
+			href = top.location.href;
+		var stokPos = href.indexOf("stok=");
+		if (stokPos >= 0){
+			stok = href.substring(stokPos+5);
+		};
+		return stok;
+	})();
+}catch(e){
+	var h = function(){
+		location.href = "/";
+	};
+	
+	if (logoutProxy){
+		logoutProxy.write({}, h, h, h)
+	};
+};
+/*initial info*/
+var INIT_URL = $.su.url("/admin/initial?form=initial");
+var INIT_PROXY = new $.su.Proxy({
+    url: INIT_URL,
+    async:false
+});
+
+INIT_PROXY.read({},function(data){
+	/*判断出厂标识*/
+    if(data.config_status == "Modify"){        
+    }else{
+        location.href = "./login.html";
+    }
+    
+    /*wan口数量*/
+    if(data && data.wanmode){
+        $.su.wanCount = data.wanmode;
+    }
+    /*单WAN口判断*/
+    if(data && data.singleWan){
+        $.su.singleWan = data.singleWan;
+    }
+    /*接口数量*/
+    if(data && data.interfaceCount){
+    	$.su.interfaceCount = parseInt(data.interfaceCount);
+    }
+	/*radio数量*/
+    if(data && data.radio){
+        $.su.radioCount = parseInt(data.radio, 10);
+    }else{
+        $.su.radioCount = 0;
+    }
+
+    /*接口样式*/
+    if(data && data.interfaceModel){
+    	$.su.interfaceModel = parseInt(data.interfaceModel, 10);
+    }else{
+    	$.su.interfaceModel = -1;
+    }
+
+    /*百兆判断*/
+    if(data && data.isFast){
+    	$.su.isFast = parseInt(data.isFast);
+    }else{
+    	$.su.isFast = 0;
+    }
+});
+/*用户账户修改*/
+var ACC_PWD_URL = $.su.url("/admin/administration?form=account");
+
+var user_modify_msg = $("div#user-modify-msg").msg({
+	type: "confirm",
+	global: true,
+	closeBtn:true,
+	cls: "new-page user-modify",
+	title:"管理账户",
+	showHead:true
+});
+
+$(".top-banner").delegate(".user", "click", function(e){
+	e.preventDefault();
+    e.stopPropagation();
+    user_modify_msg.msg("show");
+    user_modify_msg.msg("hideButtons");
+    $("#user-modify-form").form("load");
+    $("#user-modify-form").form("reset");
+    $("#pwd_status").status('setNormal');
+
+});
+
+
+
+	var old_acc = $("input#old_acc").textbox({
+		fieldLabel: $.su.CHAR.ACCOUNT.OLDUSER,
+		vtype:"ascii_visible",
+		minLength:1,
+		maxLength:15,
+		allowBlank: false
+	});
+
+	var old_pwd = $("input#old_pwd").password({
+		fieldLabel: $.su.CHAR.ACCOUNT.OLDPWD,
+		allowBlank: false,
+		vtype:"ascii_visible",
+		showLevel:false,
+		minLength:1,
+		maxLength:15
+	});
+
+	var new_acc = $("input#new_acc").textbox({
+		fieldLabel: $.su.CHAR.ACCOUNT.NEWUSER,
+		cls:"part-separate",
+		allowBlank: false,
+		vtype:"ascii_visible",
+		minLength:1,
+		maxLength:15
+	});
+
+	var passwordCheck = function(new_pwd, cfm_val){
+		
+		if(cfm_val == new_pwd){
+			$("#pwd_status").status("setSuccess");
+			return true;
+		}else{
+			$("#pwd_status").status("setFailed");
+			return false;
+		};
+	}; 
+
+	$("input#new_pwd").password({
+		fieldLabel: $.su.CHAR.ACCOUNT.NEWPWD,
+		allowBlank: false,
+		vtype:"ascii_visible",
+		minLength:6,
+		allowVisible: true,
+		maxLength:15
+	}).on("ev_change", function(item, data){
+		$("#pwd_status").status('setNormal');
+		$("input#cfm_pwd").password('setNormal');
+		
+		var new_pwd = $("input#new_pwd").password("getValue");
+		var cfm_val = $("input#cfm_pwd").password("getValue");
+		if ( cfm_val){
+			passwordCheck(new_pwd, cfm_val);
+		}
+	}).on("ev_validatechange", function(item, data){
+		var new_pwd = $("input#new_pwd").password("getValue");
+	    var cfm_val = $("input#cfm_pwd").password("getValue");
+
+		if( cfm_val=='' ){
+			$("#pwd_status").status('setNormal');
+			return true;
+		}else{
+			passwordCheck(new_pwd, cfm_val);
+		};
+	});
+	
+
+	$("input#cfm_pwd").password({
+		fieldLabel: $.su.CHAR.ACCOUNT.CONFIRM,
+		vtype:"ascii_visible",
+		minLength:6,
+		maxLength:15,
+		cls:"inline",
+		allowBlank: false,
+		allowVisible: true,
+		validator:function(val){
+			return true;
+		},
+		showLevel:false
+	}).on("ev_change ev_validatechange", function(){
+		var new_pwd = $("input#new_pwd").password("getValue");
+	    var cfm_val = $("input#cfm_pwd").password("getValue");
+		
+		if (new_pwd == ""){
+			if ( cfm_val == "" ){
+				$("#pwd_status").status("setNormal");
+			}else{
+				if (!passwordCheck(new_pwd, cfm_val)){
+					$("input#cfm_pwd").password("setError");
+				};
+			}
+		}else{
+			if (!passwordCheck(new_pwd, cfm_val)){
+				$("input#cfm_pwd").password("setError");
+			}
+		}
+	});
+
+	$("#pwd_status").status({
+		cls:"inline"
+	});
+
+	$("#user-modify-btn").button({
+		text:$.su.CHAR.OPERATION.SAVE,
+		handler:function(){
+			user_form.form("submit", {}, function(data){
+				setTimeout(function() {
+					user_modify_msg.msg("close");
+				}, 1000);		
+			}, function(error){
+
+			}, function(fail){
+
+			});
+		}
+	});
+
+
+	var pwdProxy = new $.su.Proxy({
+		url: ACC_PWD_URL
+	});
+
+	var user_form = $("#user-modify-form").form({
+		proxy: pwdProxy,
+		autoLoad:false,
+		fields: [
+			{name: "old_acc", mapping: "old_acc"},
+			{name: "old_pwd", mapping: "old_pwd"},
+			{name: "new_acc", mapping: "new_acc"},
+			{name: "new_pwd", mapping: "new_pwd"},
+			{name: "cfm_pwd", mapping: "cfm_pwd"}
+		],
+		validator:function(){
+			var  val = $("input#cfm_pwd").password("getValue");
+			var new_pwd = $("input#new_pwd").password("getValue");
+			// //console.log(new_pwd, val);
+			if(new_pwd.length < 6 || new_pwd.length > 15){
+                $("input#new_pwd").password("setError", "密码长度最少为6位,最多为15位");
+                return false;
+            }
+            if(val.length < 6 || val.length > 15){
+                $("input#cfm_pwd").password("setError", "密码长度最少为6位,最多为15位");
+                return false;
+            }
+			if(val == new_pwd)
+			{
+				
+				$("#pwd_status").status("setSuccess");
+				return true;
+			}
+			else
+			{
+				
+				// $("#pwd_status").status("setFailed");
+				$("input#cfm_pwd").password("setError", $.su.CHAR.ERROR["00000148"]);
+				return false;
+			}
+
+		},
+		submitBtn: "#user-modify-btn"
+	});
+
+	$("#user-modify-form").find(".form-submit.button-container.submit").css("textAlign", "center");
+
+/*快速配置*/
+var wizard_msg = $("div#wizard-msg").msg({
+		type: "confirm",
+		global: true,
+		closeBtn:false,
+		cls: "wizard",
+		title:$.su.CHAR.WIZARD.WIZARD,
+		showHead:false,
+		allowVisible:false
+	});
+
+	$("div#wizard-msg").hide;
+
+$.su.wizard = $.su.wizard || {
+	"msg": wizard_msg,
+	"show": function(){
+		var me = this;
+		var wizardForm = $('#wizard-form');
+    	var url = './pages/userrpm/wizard.html';
+    	wizardForm.load(url, {}, function(){
+            me.msg.msg("show");
+        });
+		
+	},
+	"hide": function(){
+		this.msg.msg("hide");
+	}
+};
+
+$.su.wizard.msg.msg("hideButtons");
+
+
+
+
+
+/*用户登出*/
+var URL_LOGOUT = $.su.url("/admin/system?form=logout"); //"./data/login.json"
+
+var logoutProxy = new $.su.Proxy({
+	url: URL_LOGOUT,
+	autoLoad: false
+});
+
+/**********STR*用户登出提示信息*STR**********/
+
+var logoutConfirmMsg = $("div#logout_confirm_msg").msg({
+	type: "confirm",
+	global: true,
+	closeBtn: false,
+	cls: "reboot-confirm-size",
+	okHandler: function(e){
+		var h = function(){
+			if (localStorage){
+				localStorage.setItem("token", "");
+			};
+			location.href = "/";
+		};
+		//localStorage.getItem("token")
+		logoutProxy.write({}, h, h);
+	}
+});
+
+
+$(".top-banner").delegate(".logout", "click", function(e){
+	e.preventDefault();
+    e.stopPropagation();
+    $("div#logout_confirm_msg").msg("show");
+});
+
+$('span#logout_confirm_msg_text').html($.su.CHAR.INDEX.CONFIRM_LOGOUT);
+
+var URL_APMNGR_NOTIFICATION = $.su.url("/apmngr_status?form=status"); //apmngr's notification
+var apNoteProxy = new $.su.Proxy({
+	url: URL_APMNGR_NOTIFICATION,
+	autoLoad: false,
+	timeout: 5000
+});
+var apUnknownProxy = new $.su.Proxy({
+	url: URL_APMNGR_NOTIFICATION,
+	autoLoad: false,
+	timeout: 5000,
+	async: false
+});
+var $linkDetail = $("#link-detail-window").msg({
+	closeBtn: true,
+	cls:"l",
+	title: "不支持的AP机型列表",
+	type: "window",
+	global: true,
+    showHead: true
+});
+function showDetail(){
+	apUnknownProxy.write({"method":"getUnknownAp"}, function(data){
+		var html = "";
+		var index = 0;
+		var unknown_list = data.unknown_list;
+		var unrecognize = data.unrecognize_ap;
+		if(unknown_list != undefined && unknown_list.length > 0)
+		{
+			index = unknown_list.length;
+			for(var i = 0;i < unknown_list.length; i = i + 1)
+			{
+				html += "<tr><td class='detail-key' style='text-align:center;width:80px;border:1px solid #d9d9d9;'>" + (i+1) + "</td><td class='detail-value' style='text-align:center;border:1px solid #d9d9d9;width:350px'>"+unknown_list[i].ap_name+" "+unknown_list[i].hwver+"</td></tr>";
+			}
+		}
+		if(unrecognize == 1)
+		{
+			html += "<tr><td class='detail-key' style='text-align:center;width:80px;border:1px solid #d9d9d9;'>" + (index+1) + "</td><td class='detail-value' style='text-align:center;border:1px solid #d9d9d9;width:350px'>未知型号</td></tr>";
+		}
+		$("#link-detail-model").html(html);
+		$linkDetail.msg('show');
+	});
+}
+function refreshConfigStatus(){
+	apNoteProxy.write({"method":"get"}, function(data){
+		if(data.ap_unknown != undefined && data.ap_unknown == 1){
+			text = $.su.CHAR.APMNGR.UNKOWN_DEV_NOTE;
+		}else{
+			text = "";
+		}
+		$('span#unknown-ap').text(text);
+	});
+}
+
+refreshConfigStatus();
+window.indexPageConfTimeout = window.indexPageConfTimeout || setInterval(refreshConfigStatus, 10000);
+
+$("a#top-control-unknown-ap").click(function(e){
+	showDetail();
+});
+
+/**********END*用户登出提示信息*END**********/
+
+/**********SRT*警告信息*SRT**********/
+var warningMsg = $("div#global-warning-msg").msg({
+	type: "alert",
+	global: true,
+	cls: "m",
+	closeBtn: false
+});
+
+/**********END*警告信息*END**********/
+
+
+
+/**********SRT*在线升级提示信息*SRT**********/
+var query_interval = false;
+var showUpgradeMsg = "1";	/* 1:show the msgbox next time 0:don't show next time*/
+var CLOUD_FIRMWARE_URL = $.su.url("/admin/cloud_upgrade?form=firmware"); 
+var downloadTimeout = 0;
+var cloudFirmwareProxy = new $.su.Proxy({
+        url: CLOUD_FIRMWARE_URL
+});  
+var upgradeNote = " ";
+var updateFlag = false;
+var DOWNLOADTIMEOUT = 300;	/* the timeout of download (second) */
+
+var cloud_upgrade_alert_cnt = $("div#cloud_upgrade_alert_cnt").msg({
+	type: "upgrade",
+	global: true,
+	closeBtn: false,
+	cls: "warning reboot-confirm-size",
+	okHandler:function(){
+			$("#cloud_upgrade_alert_cnt").msg('hide');
+			$("#cloud_note").html("正在下载...");	
+			$("#cloud_upgrade_cnt").msg("show");	
+			$("#cloud_upgrade_cnt").msg('hideButtons');
+			$("#cloud_upgrade_bar_cnt").show();	
+			handle_ignore_box();
+			cloudFirmwareProxy.write({method: 'download',params:{global_flag:showUpgradeMsg}}, function(data){  
+				/* tell the luci begin to download */
+			},function(errcode){
+        		hide_cloud_upgrade_promsg();
+        		$("#cloud_error_str").html("下载失败"); 
+				showOnlineAlertMag();
+			},function(){
+				hide_cloud_upgrade_promsg();
+				$("#cloud_error_str").html("下载失败"); 
+				showOnlineAlertMag();
+			});
+
+			downloadTimeout = setTimeout(function() {
+				hide_cloud_upgrade_promsg();   
+				$("#cloud_error_str").html("下载超时"); 
+				showOnlineAlertMag();
+			}, DOWNLOADTIMEOUT*1000);
+
+			if(!query_interval)
+			{
+				query_interval = setInterval(download_firmware,2000);
+			}
+			return false;
+		},
+		// cls: "m warning",
+		noHandler:function(){
+			handle_ignore_box();
+			cloudFirmwareProxy.write({method: 'global_set',params:{global_flag:showUpgradeMsg}}, function(data){
+			});
+			return true;
+		}
+});
+
+
+
+
+$("#upgrade_text").html(" ");
+
+$("#ignore_box").checkbox({
+    /*fieldLabel: $.su.CHAR.IMB.TITLE,*/
+    items: [
+        {boxlabel: "下次不再提示", inputValue: "on", uncheckedValue: "off", itemCls: "spec_chk", checked:false}
+    ]
+})
+
+ 
+$("#cloud_upgrade_failed_cnt").msg({
+	type: "alert",
+	global: true,
+	cls: "m",
+	closeBtn: false	
+});
+
+$("#cloud_upgrade_cnt").msg({
+	type: "confirm",
+	global: true,
+	closeBtn: false,
+	cls: "reboot-confirm-size"
+});
+
+function handle_ignore_box()
+{
+	var ignore_flag = $("#ignore_box").checkbox("getValue1");
+	if (ignore_flag[0] == "on")
+	{
+		showUpgradeMsg = "0";
+		/* the checkbox is checked, means don't show the msg box */
+	}
+	else
+	{
+		showUpgradeMsg = "1";
+		/* the checkbox is not checked, means need show the msg box */
+	}
+
+}
+
+function check_version()
+{	
+	cloudFirmwareProxy.write({method: 'global_get'}, function(data){
+
+    		/* if the there is newer firmware, and we have not alert to the user */ 
+        	if (data.flag == "1" && data.global_flag == "1" && data.not_show == "0")
+        	{
+        		upgradeNote = data.upgrade_note;
+        		if (upgradeNote != null && upgradeNote.length != 0)
+        		{
+        			upgradeNote = upgradeNote.replace(/\\n/g, "<br/>");
+
+					$("#upgrade_text").html(upgradeNote);
+					$("div#upgrade_note").msg("show");       			
+        		}
+        		else
+        		{
+        			$("div#upgrade_note").msg("hide");
+        		}
+        		$("div#cloud_upgrade_alert_cnt").msg("show");
+
+        	}
+        	if (data.flag == "1")
+        	{
+        		/* show the red point to remind the user to upgrade */
+        		show_red_point();
+        	}
+	});
+}
+
+function show_red_point()
+{
+	var fst_menu_point = "<span style=\"color:red;font-size:28px;font-weight:bold;position:relative;bottom:13px;left:-86px\">.</span>",
+	advanced_menu_point = "<span style=\"color:red;font-size:28px;font-weight:bold;position:relative;bottom:12px;left:5px\">.</span>",
+	tab_point = "<span style=\"color:red;font-size:28px;font-weight:bold;position:relative;bottom:13px;left:5px\">.</span>";
+
+	var fst_menu = $("a#sys-tools");
+	if (fst_menu)
+	{
+		/* system-tools show red point */
+		fst_menu.append(fst_menu_point);
+	}
+	var advanced_menu = $("a#sys-tools").closest("li").find("ul.sec li").eq(0).find("a");
+	if (advanced_menu)
+	{
+		/* device management show red point */
+		advanced_menu.append(advanced_menu_point);
+	}
+	/*
+	var tab = $("div#tab-menu").find("ul.tab-menu-ul").eq(34).find("li").eq(3).find("a");
+	if (tab)
+	{
+		tab.append(tab_point);
+	}
+	*/
+	$("ul.tab-menu-ul li a").each(function(i, obj){
+		if ($(obj).attr("data-name") == "upgrade"){
+			/* firmware upgrade show red point */
+			$(obj).append(tab_point);
+		}
+	})
+}
+
+function hide_cloud_upgrade_promsg()
+{
+	clearInterval(query_interval);
+	query_interval = false;
+	clearTimeout(downloadTimeout);
+	cloud_pro_bar.progressbar("stop");
+	cloud_pro_bar.progressbar("reset");
+	cloud_pro_bar_reboot.waitingbar("stop");
+	cloud_pro_bar_reboot.waitingbar("reset");
+	percentOnline = 0;
+
+	$("#cloud_upgrade_alert_cnt").hide();
+	$("#cloud_upgrade_alert_cnt").msg("close",function(){
+		$("#cloud_upgrade_alert_cnt").msg('showButtons');
+		$('#cloud_confirm_cnt').show();
+	});
+	$("#cloud_upgrade_cnt").msg("close",function(){
+		$("#cloud_upgrade_bar_cnt").hide();	
+	});
+}
+
+function showOnlineAlertMag(){
+	$("div#cloud_upgrade_failed_cnt").msg("show");
+};
+
+var downloadDone = 0;
+function download_firmware()
+{
+	if (downloadDone == 0)
+	{
+		cloudFirmwareProxy.write({method: 'download_status'}, function(data){
+
+	    var status = data.status;
+	    var progress = 0;
+	    if (downloadDone == 0)
+	    {
+	    	if (status == "2")	/* the download is done */
+	    	{
+	    		clearTimeout(downloadTimeout);
+	    		clearInterval(query_interval);	/* the firmware is download over, so clean the interval*/
+	    		query_interval = false;
+	    		updateFlag = false;
+	    		cloud_pro_bar.progressbar("setValue", 1.00);	/* set the progressbar to 100% */
+
+	    		if(!query_interval)	/* the download is finished, begin to upgrade*/
+				{
+					query_interval = setInterval(cloud_upgrade,1000);
+					downloadDone =1;
+				}
+	    			
+	    	}
+	    	else if (status != "0")	/* the download is doing */
+	    	{
+	    		progress = parseFloat(data.progress);
+	    		progress = progress / 100;
+	    		if ( progress > 0 && progress <= 1.0)
+	    		{
+	    			cloud_pro_bar.progressbar("setValue", progress.toFixed(2));
+	    		}	
+	    		if( progress == 1)
+	    		{
+	    			$("#cloud_note").html("下载完毕，开始校验并准备升级...");	
+	    		}
+	    	}
+	    	else	/* the download is failed */
+	    	{
+	    		hide_cloud_upgrade_promsg();
+	    		$("#cloud_error_str").html("下载失败"); 
+				showOnlineAlertMag();
+	    	}
+	    }
+	    },function(errcode){
+				hide_cloud_upgrade_promsg();
+		},function(){
+				/*hide_cloud_upgrade_promsg();*/
+		});
+	}
+
+}
+
+var timeoutOnline = 0;
+var rebootIntervalOnline = 0;
+var isRebootFinishOnline = false;
+var percentOnline = 0;
+var totolTimeOnline = 130;	/* total time of upgrade */
+var rebootTimeOnline = 150*1000;	/* total time of reboot */
+var percentPersecondOnline = 1 / totolTimeOnline;
+
+function cloud_upgrade()	/* cloud upgrade and reboot */
+{
+
+		if (updateFlag == false)
+		{
+			$("#cloud_note").html("正在升级，在此期间请不要进行其它操作");
+			updateFlag = true;
+		}
+
+		percentOnline = percentOnline + percentPersecondOnline;
+		cloud_pro_bar.progressbar("setValue", percentOnline.toFixed(2));
+		if(percentOnline >= 1.0)
+		{
+			clearInterval(query_interval);
+			cloud_pro_bar.progressbar("reset");
+			cloud_pro_bar.progressbar("hide");
+			percentOnline = 0;
+			$("#cloud_note").hide();
+
+			cloud_pro_bar_reboot.waitingbar("show");
+			cloud_pro_bar_reboot.waitingbar("run");
+			timeoutOnline = setTimeout(function() {
+				rebootIntervalOnline = setInterval(function(){
+					$.ajax({
+						url: "./login.html",
+						async: true,
+						dataType: "html",
+
+						success: function(data){
+							isRebootFinishOnline = true;
+						},
+						error: function(){
+						    isRebootFinishOnline = false;
+						}
+						});
+				        		    
+					    if(isRebootFinishOnline){
+					    	clearInterval(rebootIntervalOnline);
+					    	location.href= "./login.html";
+					    }
+					}, 1000);
+				}, rebootTimeOnline);	
+		}
+}
+
+
+
+var cloud_pro_bar = $('input#cloud_pro_bar').progressbar({
+	fieldLabel: null,
+	width: 326,
+	   height: 6,
+	value: 0,
+	expression: "percentage*100", 
+	cls: 'reboot-loading-probar'
+});
+
+var cloud_pro_bar_reboot  = $('input#cloud_pro_bar_reboot').waitingbar({
+	fieldLabel: $.su.CHAR.FIMWARE.REBOOT
+});
+
+cloud_pro_bar_reboot.waitingbar("hide");
+/**********END*在线升级提示信息*END**********/
+
+/**********STR*app定义*STR*********/
+$.su.app = {
+	/*runningModule: $({
+		name: ""
+	}),
+	init: function(){
+		$.su.app.runningModule.on("ev_unload", function(e, name){
+			$.su.app.runningModule[0]["name"] = name;
+			//console.log("ev_unload");
+			$.su.app.runningModule.off("ev_beforeunload");
+		});
+	},*/
+	runningModule: {
+		name: "",
+		addUnloadHandler: function(fn){
+			if ($.isFunction(fn)){
+				this.unloadHandlers.push(fn);
+			}
+		},
+		clearUnloadHandler: function(){
+			this.unloadHandlers = [];
+		},
+		unload: function(oldN, newN){
+			this.name = newN;
+			var handlers = this.unloadHandlers;
+			for (var index in handlers){
+				var fn = handlers[index];
+				if ($.isFunction(fn)){
+					fn();
+				}
+			};
+			this.clearUnloadHandler();
+		},
+		unloadHandlers: []
+	},
+	errorOperation: {
+		denied: function(error_code){
+			var msg = $("div#global-warning-msg");
+			$("span#global-warning-text").html($.su.CHAR.ERROR_CODE[error_code]);
+			if (msg.is(":hidden")){
+				msg.msg("show");
+			}
+			if(error_code == 704){
+				setTimeout(function() {
+					location.href = "./login.html";
+				}, 2000);	
+				msg.msg("hideButtons");
+			}
+		},
+		userConflict: function(){
+			//操作中用户冲突的回调
+		}
+	},
+	navGoTo: function(name, url){
+		var contentContainer = $("div#top-content");
+		//旧模块卸载
+		$.su.Manager.removeLocal();
+		$.su.loading.show();
+
+		/*if (name != "quick_setup"){
+			//非quicksetup
+			
+			
+			contentContainer.load(url, {}, function(response,status,xhr){
+				$.su.layout.doLayout();
+				$.su.loading.hide();
+			});
+		}else{*/
+			//$.su.app.runningModule.trigger("ev_beforeunload", [$.su.app.runningModule[0].name, name]);
+		var runningModule = $.su.app.runningModule;
+			runningModule.unload(runningModule.name, name);
+
+		contentContainer.load(url, {}, function(response,status,xhr){
+			//$.su.app.runningModule.trigger("ev_unload", [name]);
+			$.su.layout.doLayout();
+			//$.su.loading.hide();
+		});
+
+		//}
+	},
+	menuGoTo: function(name, url, isAdvanced){
+		var contentContainer = isAdvanced ? $("div#func-advanced") : $("div#func-basic");
+		//旧模块卸载
+		$.su.Manager.removeLocal();
+		//var runningModule = $.su.app.runningModule;
+		//$.su.app.runningModule.trigger("ev_beforeunload", [$.su.app.runningModule[0].name, name]);
+		//console.log("menuGoTo", runningModule)
+		var runningModule = $.su.app.runningModule;
+			runningModule.unload(runningModule.name, name);
+
+		$.su.loading.show();
+		contentContainer.load(url, {}, function(response,status,xhr){
+			//$.su.app.runningModule.trigger("ev_unload", [name]);
+			
+			$.su.layout.doLayout();
+			/*$("div.top-main").scrollTo({
+				top: 0,
+				left: 0
+			}, 100);*/
+			$("div.top-main").scrollTo(0);
+			$.su.loading.hide();
+		});
+	}   
+};
+//$.su.app.init();
+/**********END*app定义*END*********/
+
+
+
+/**********STR*菜单部分效果*STR**********/
+$.su.nav = (function(){
+	var nav = {};
+	//字符串初始化
+	var navItems = $("ul#ul-nav li a");
+	navItems.each(function(index, element){
+		var me = $(element),
+			name = me.attr("name");
+		me.html("<span>"+$.su.CHAR.NAV[name.toUpperCase()]+"</span>");
+	});
+	
+	navItems.on("click", function(e){
+		e.preventDefault();
+		var me = $(this),
+			name = me.attr("name");
+		
+		$.su.nav.goTo(name);
+
+	});
+	
+	nav.goTo = function(name){ 
+		var item = $("ul#ul-nav li a[name='"+name+"']");
+		var url = item.attr("href");
+
+		$("ul#ul-nav li").removeClass("selected");
+		item.closest("li").addClass("selected");
+		$.su.app.navGoTo(name, url);
+	};
+
+	return nav;
+})();
+
+	$.su.nav.goTo("advanced");
+
+/**********END*菜单部分效果*END**********/
+
+/**********SRT*布局调整*SRT*********/
+$.su.layout.doLayout = function(){
+	//alert("layout");
+	//console.log($.su.app.runningModule.name);
+
+	var mh = $("div.menu-container").height(),
+		hh = $("div.top-header").height(),
+		fh = $("div.top-footer").height(),
+        tabh = $("div.tab-menu-wrapper").height(),
+		wh = $(window).height();
+
+	//$("div.function-container").css("height", "inherit");
+
+	$("div.top-main").css({
+		height: wh - hh -tabh
+	});
+
+	var th = $("div.top-main").height(),
+		ch = wh - hh - tabh,// - fh
+		h = Math.max(mh, ch);
+
+	$("body").css({
+		"min-height": wh - 210
+	});
+
+	var c = $("div.function-container");
+	var pT = parseInt(c.css("paddingTop"), 10);
+	var pB = parseInt(c.css("paddingBottom"), 10);
+
+	$("div.function-container").css({
+		"min-height": wh - 210
+	});
+
+	//alert(wh, hh, fh, mh, ch, h, pT, pB);
+		
+	if ($.su.app.runningModule.name === "quick_setup"){
+		var wh = $(window).height(),
+			fh = $("div.top-footer").height(),
+			hh = $("div.top-header").height();
+
+		var c = $("div#quicksetup-form").css("height", "inherit");
+
+		var ch = $("div#top-content").height(),
+			h = ch;
+
+		if (fh+hh+ch >= wh){
+			c.css("height", h);
+		}else{
+			c.css("height", wh - hh - fh);
+		};
+		
+	};
+};
+/**********END*布局调整*END*********/
+
+/**页面初始化**/
+$(window).on("resize", function(){
+	$.su.layout.doLayout();
+});
+
+$(window).on("load", function(){
+	$.su.layout.doLayout();
+	check_version();
+});
+
+});
+//]]>
+</script>
+</body>
+</html>

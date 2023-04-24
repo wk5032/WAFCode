@@ -1,0 +1,202 @@
+{
+	"id": 1,
+	"result": {
+		"menu": [
+			{			
+					"name": "running-status"		
+					
+						
+		  }, {
+					"name": "basic-setting",
+					"children": [{
+							"name": "front-setting",
+							"children": [{
+										"name": "front-setting"
+								}]										
+							
+					},{
+							"name": "http-settings",
+							"children": [{
+											"name": "http-settings"											
+							}]		
+							
+					},{
+							"name": "mqtt-settings",
+							"children": [{
+											"name": "mqtt-settings"
+							}]									
+						
+				}]						
+			
+   	
+		}, {
+					"name": "firewall",
+					"children": [{
+							"name": "alarm-setting",
+							"children": [{
+										"name": "alarm-setting"
+								}]
+					},{
+							"name": "mod-rule",
+							"children": [{
+											"name": "mod-rule"
+							}]				
+											
+					},{
+							"name": "white-black",
+							"children": [{
+											"name": "white-ip"
+											}, {
+											"name": "black-ip"
+											}, {
+											"name": "white-url"
+											}, {
+											"name": "black-url"
+							}]	
+				},{
+							"name": "ddos",
+							"children": [{
+											"name": "ddos"
+							}]		
+				},{
+							"name": "dir-access",
+							"children": [{
+											"name": "dir-access"
+							}]				
+											
+				},{
+							"name": "ip-setting",
+							"children": [{
+											"name": "ip-setting"
+							}]				
+											
+					}]		
+				
+				
+	},{
+			"name": "newportal",
+			"children": [{
+							"name": "machine",
+							"children": [{
+										"name": "machine"
+								},{
+										"name": "suffix-stat"
+								},{
+										"name": "dir-stat"
+								}]
+								
+					},{
+							"name": "gan-rule",
+							"children": [{
+											"name": "gan-rule"											
+							}]													
+						
+				}]	
+							
+				
+		}, {
+					"name": "behavior-control",
+					"children": [{
+							"name": "atk-log",
+							"children": [{
+										"name": "atk-log"
+								}]
+								
+					},{
+							"name": "killip-log",
+							"children": [{
+										"name": "killip-log"
+								}]
+								
+					},{
+							"name": "trace-log",
+							"children": [{
+										"name": "trace-log"
+								}]
+								
+					},{
+							"name": "sys-log",
+							"children": [{
+											"name": "sys-log"											
+							}]													
+						
+				}]	
+				
+				
+	}, {
+					"name": "advanced",
+					"children": [{
+							"name": "ip-stat",
+							"children": [{
+										"name": "ip-stat"
+								},{
+										"name": "http-stat"
+							}]
+								
+					},{
+							"name": "ua-stat",
+							"children": [{
+										"name": "ua-stat"
+								}]
+								
+					},{
+							"name": "trace-url",
+							"children": [{
+										"name": "trace-url"
+								}]
+								
+					},{
+							"name": "atk-trend",
+							"children": [{
+										"name": "atk-trend"
+								}]
+								
+					},{
+							"name": "atk-source",
+							"children": [{
+											"name": "atk-source"											
+							}]	
+					},{
+							"name": "atk-type",
+							"children": [{
+											"name": "atk-type"											
+							}]																
+						
+				}]					
+			
+		}, {
+					"name": "sys-tools",
+					"children": [{
+						  "name": "remote",
+							"children": [{
+											"name": "remote"											
+							}]	
+					},{
+							"name": "upgrade",
+							"children": [{
+											"name": "upgrade"											
+							}]	
+					},{
+							"name": "restore",
+							"children": [{
+											"name": "restore"											
+							}]	
+					},{
+							"name": "reboot",
+							"children": [{
+											"name": "reboot"											
+							}]																
+						
+				}]			
+				
+				
+	
+			
+			
+			
+		}],
+		"page": "advanced",
+		"model": "hihttps"
+	},
+	"error_code": "0"
+}

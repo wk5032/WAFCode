@@ -1,0 +1,1709 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>POLICY_ROUTING</title>
+<style type="text/css">
+</style>
+</head>
+
+<body>
+<div class="func-container">
+    <div id="policy_rule_list">
+        <div id="policy_rule_grid">
+        </div>
+
+        <div id="policy_rule">
+            <input id="name" name="name"/>
+            <input id="group_name" name="group_name"/>
+            <input id="service_type" name="service_type"/>
+
+            <div id="service_div" style="display:none">
+            <input id="proto" name="proto">
+            <div id="div_protocol_port" style="display:none">
+                    <input type="text" id="sport" name="sport">
+                    <input type="text" id="dport" name="dport">
+            </div>
+            <div id="div_icmp" style="display:none">
+                    <input type="text" id="type" name="type">
+                    <input type="text" id="code" name="code">
+            </div>
+            <div id="div_other" style="display:none">
+                    <input id="other" name="other">
+            </div>
+            </div>
+
+            <input id="src_ipgroup" name="src_ipgroup"/>
+            <div id="self_define_src" style="display:none">
+                <input type="text" id="src_start_ip" name="src_ipstart" value="" />
+                <span>-</span>
+                <input type="text" id="src_end_ip" name="src_ipend" value="" />
+            </div>
+            <input id="dst_ipgroup" name="dst_ipgroup"/>
+            <div id="self_define_dst" style="display:none">
+                <input type="text" id="dst_start_ip" name="dst_ipstart" value="" />
+                <span>-</span>
+                <input type="text" id="dst_end_ip" name="dst_ipend" value="" />
+            </div>
+            <input id="interfaces" name="interfaces"/>
+            <input id="state" name="state"/>
+            
+            <input id="time_mode" name="time_mode" value="input"/>
+            <div id="custom_set">
+                <input id="weekdays" name="weekdays" value=""/>
+                <input id="fromHour" name="fromHour" value=""/>
+                <input id="fromMin" name="fromMin" value=""/>
+                <input id="toHour" name="toHour" value=""/>
+                <input id="toMin" name="toMin" value=""/>
+                <button id="addTime" name="addTime" class="add-time"></button>                
+                <ul id="time_seg">                    
+                </ul>                
+            </div> 
+
+            <div id="calendar_set">
+                <input id="slots" name="slots"/>
+            </div>
+
+            <input id="index" name="index"/>
+
+        </div>
+    </div>
+    <div id="policy_routing_hlep">    </div>
+</div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+
+$(document).ready(function(e){    
+    var URL_POLICY_RULE_LIST = $.su.url("/admin/policy_route?form=policy_route");
+
+    var policy_rule_Proxy = new $.su.Proxy({
+        url: URL_POLICY_RULE_LIST
+    });
+
+    $("#policy_rule_list").panel({
+        title: $.su.CHAR.POLICY_ROUTE.RULE_LIST,
+        collapsible: false,
+        help: $("#policy_routing_hlep")
+    });
+
+    var name = $("#name").textbox({
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.RULE_NAME,       
+        maxLength: 32,
+        allowBlank: false,
+        vtype: "string_visible_allow_blank",
+        tips:"（1-32个字符）"
+    });
+
+    $("#group_name").textbox({
+        fieldLabel:$.su.CHAR.POLICY_ROUTE.OPTIONAL,
+        allowBlank:true
+    });
+
+    $("#group_name").textbox("hide");
+
+
+    var timeobj = $("#timeobj").textbox({
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.TIME,
+        allowBlank: true  
+    });
+
+    $("#timeobj").textbox("hide");
+
+    var service_type = $("#service_type").combobox({
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.SERVICE_TYPE,
+        allowBlank: false,
+        items:[{name:"ALL",value:"ALL", selected:true}]
+    }).on('ev_change', function(e, oldValue, newValue){
+        if(newValue[0] == "self_service"){  
+            $('#service_div').form("show");
+            $('div#div_protocol_port').form("show");
+            $('div#div_icmp').form("hide");
+            $('div#div_other').form("hide");
+
+            $("input#proto").radio("enable");
+            $("input#sport").textbox('enable');
+            $("input#dport").textbox('enable');
+            $("input#type").textbox('disable');
+            $("input#code").textbox('disable');
+            $("input#other").textbox('disable');
+            
+            $("input#sport").textbox("setValue", "-");
+            $("input#dport").textbox("setValue", "-");
+        }
+        else
+        {
+           // console.log("in else branch\n");
+            $('#service_div').hide();
+            $('div#div_protocol_port').form("hide");
+            $('div#div_icmp').form("hide");
+            $('div#div_other').form("hide");
+
+            $("input#proto").radio("disable");
+            $("input#sport").textbox('disable');
+            $("input#dport").textbox('disable');
+            $("input#type").textbox('disable');
+            $("input#code").textbox('disable');
+            $("input#other").textbox('disable');
+        }
+    });
+
+    $("input#proto").radio({
+        fieldLabel: $.su.CHAR.SERVICE_TYPE.PROTOCOL_TYPE,
+        columns:5,
+        items:[
+            {boxlabel: $.su.CHAR.SERVICE_TYPE.PROTOCOL_TCP, cls: '', inputValue: 'tcp',checked:true},
+            {boxlabel: $.su.CHAR.SERVICE_TYPE.PROTOCOL_UDP, cls: '', inputValue: 'udp'},
+            {boxlabel: $.su.CHAR.SERVICE_TYPE.PROTOCOL_ALL, cls: '', inputValue: 'tcp-udp'},
+            {boxlabel: $.su.CHAR.SERVICE_TYPE.PROTOCOL_ICMP, cls: '', inputValue: 'icmp'},
+            {boxlabel: $.su.CHAR.SERVICE_TYPE.PROTOCOL_OTHER, cls: '', inputValue: 'other'}
+        ] 
+    }).on('ev_change', function(e, oldValue, newValue){
+        //console.log(oldValue);
+        //console.log(newValue);
+        //$editor = $(o.grid("getEditor"));
+        if(newValue === 'icmp'){
+            $('div#div_protocol_port').hide();
+            $('div#div_icmp').form("show");
+            $('div#div_other').form("hide");
+
+            $("input#sport").textbox('disable');
+            $("input#dport").textbox('disable');
+            $("input#type").textbox('enable');
+            $("input#code").textbox('enable');
+            $("input#other").textbox('disable');
+                        
+            $("input#type").textbox("setValue", "");
+            $("input#code").textbox("setValue", "");        
+        }
+        else if(newValue === "other"){
+            $('div#div_protocol_port').form("hide");
+            $('div#div_icmp').form("hide");
+            $('div#div_other').form("show");
+
+            $("input#sport").textbox('disable');
+            $("input#dport").textbox('disable');
+            $("input#type").textbox('disable');
+            $("input#code").textbox('disable');
+            $("input#other").textbox('enable');
+            
+            $("input#other").textbox("setValue", "");
+        }
+        else if(newValue === "tcp" || newValue === "udp" || newValue === "tcp-udp")
+        {
+            $('div#div_protocol_port').form("show");
+            $('div#div_icmp').form("hide");
+            $('div#div_other').form("hide");
+
+            $("input#sport").textbox('enable');
+            $("input#dport").textbox('enable');
+            $("input#type").textbox('disable');
+            $("input#code").textbox('disable');
+            $("input#other").textbox('disable');
+            
+            $("input#sport").textbox("setValue", "-");
+            $("input#dport").textbox("setValue", "-");
+        }
+    });
+    $("input#sport").portrange({
+        fieldLabel: $.su.CHAR.SERVICE_TYPE.SRC_PORT_RANGE,
+        editor: 
+        {
+            xtype: "portrange",             
+            allowBlank: false
+        },
+        validator:function(v){
+            var tmp = v.split("-");
+            var x = tmp[0];
+            var y = tmp[1];
+            var reg = new RegExp(/^\d+$/);
+
+            if(!reg.test(x) || !reg.test(y)){
+                return "您输入的源端口范围非法，请重新输入（1-65535）！";
+            }
+
+            x = parseInt(x);
+            y = parseInt(y);
+
+            if(x < 1 || x > 65535){
+                return "您输入的源端口范围非法，请重新输入（1-65535）！";
+            }
+            if(y < 1 || y > 65535){
+                return "您输入的源端口范围非法，请重新输入（1-65535）！";
+            }
+            if(x > y){
+                return "起始端口不可大于结束端口，请重新输入！";
+            }
+
+            return true;
+        }
+    });
+    $("input#dport").portrange({
+        fieldLabel: $.su.CHAR.SERVICE_TYPE.DST_PORT_RANGE,
+        editor: 
+        {
+            xtype: "portrange",             
+            allowBlank: false
+        },
+        validator:function(v){
+            var tmp = v.split("-");
+            var x = tmp[0];
+            var y = tmp[1];
+            var reg = new RegExp(/^\d+$/);
+            
+            if(!reg.test(x) || !reg.test(y)){
+                return "您输入的目的端口范围非法，请重新输入（1-65535）！";
+            }
+
+            x = parseInt(x);
+            y = parseInt(y);
+
+            if(x < 1 || x > 65535){
+                return "您输入的目的端口范围非法，请重新输入（1-65535）！";
+            }
+            if(y < 1 || y > 65535){
+                return "您输入的目的端口范围非法，请重新输入（1-65535）！";
+            }
+            if(x > y){
+                return "起始端口不可大于结束端口，请重新输入！";
+            }
+
+            return true;
+        }
+    });
+    $("input#type").textbox({
+        fieldLabel: $.su.CHAR.SERVICE_TYPE.ICMP_TYPE,
+        textFormat: $.su.format.number,
+        vtype: {
+            vtype: "number",
+            max: 255,
+            min: 0
+        },
+        maxLength:5,
+        tipsCls:"s",
+        allowBlank:false,
+        validateIcon: true
+    });
+    $("input#code").textbox({
+        fieldLabel: $.su.CHAR.SERVICE_TYPE.ICMP_CODE,
+        textFormat: $.su.format.number,
+        vtype: {
+            vtype: "number",
+            max: 255,
+            min: 0
+        },
+        maxLength:5,
+        tipsCls:"s",
+        allowBlank:false,
+        validateIcon: true
+    });
+    $("input#other").textbox({
+        fieldLabel: $.su.CHAR.SERVICE_TYPE.PROTOCOL_CODE,
+        textFormat: $.su.format.number,
+                vtype: {
+                    vtype: "number",
+                    max: 255,
+                    min: 1
+                },
+        maxLength:5,
+        tipsCls:"s",
+        allowBlank:false,
+        validateIcon: true
+    });
+
+    var src_ipgroup = $("#src_ipgroup").combobox({
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.SRC_ADDR,
+        alwaysTrigger: true,
+        allowBlank: false,       
+        items: [
+            {name:$.su.CHAR.IP_GROUP_GROUP.ANY, value:"IPGROUP_ANY", selected:true}
+        ]
+    }).on('ev_change', function(e, oldValue, newValue){
+        if(newValue[0] == "self_define_src")
+        {
+            $("#src_start_ip").textbox("enable");
+            $("#src_end_ip").textbox("enable");
+            $('#self_define_src').show();
+        }
+        else
+        {
+            $("#src_start_ip").textbox("disable");
+            $("#src_end_ip").textbox("disable");
+            $('#self_define_src').hide();
+        }
+    });
+
+    var dst_ipgroup = $("#dst_ipgroup").combobox({
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.DST_ADDR,
+        alwaysTrigger: true,
+        allowBlank: false,        
+        items: [
+            {name:$.su.CHAR.IP_GROUP_GROUP.ANY, value:"IPGROUP_ANY", selected:true}
+        ]
+    }).on('ev_change', function(e, oldValue, newValue){
+        if(newValue[0] == "self_define_dst")
+        {
+            $("#dst_start_ip").textbox("enable");
+            $("#dst_end_ip").textbox("enable");
+            $('#self_define_dst').show();
+        }
+        else
+        {
+            $("#dst_start_ip").textbox("disable");
+            $("#dst_end_ip").textbox("disable");
+            $('#self_define_dst').hide();
+        }
+    });
+
+    $("input#src_start_ip").textbox({
+        fieldLabel:$.su.CHAR.POLICY_ROUTE.IPADDR_RANGE,
+        cls: 'inline part-seperate',
+        allowBlank: false,
+        textFormat: $.su.format.ip,
+        vtype: 'ip'
+    });
+    
+    $("input#src_end_ip").textbox({
+        fieldLabel: null,
+        cls: 'inline part-seperate',
+        allowBlank: false,
+        textFormat: $.su.format.ip,
+        vtype: 'ip'
+    });
+
+    $("input#dst_start_ip").textbox({
+        fieldLabel:$.su.CHAR.POLICY_ROUTE.IPADDR_RANGE,
+        cls: 'inline part-seperate',
+        allowBlank: false,
+        textFormat: $.su.format.ip,
+        vtype: 'ip'
+    });
+    
+    $("input#dst_end_ip").textbox({
+        fieldLabel: null,
+        cls: 'inline part-seperate',
+        allowBlank: false,
+        textFormat: $.su.format.ip,
+        vtype: 'ip'
+    });
+
+    var interfaces = $("#interfaces").combobox({
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.INTERFACE,
+        allowBlank: false,
+        vtype: "string_visible_allow_blank",        
+        items:[{name:"---",value:"---"}]
+    });
+
+/*-------------------------- time start ----------------------------------*/
+    var URL_TIME_SETTING = $.su.url("/admin/time?form=settings");
+    var timeValue = '';
+    var timeSegment = [];
+
+    var weekObj = {
+        "mon": $.su.CHAR.DATE.MON,
+        "tue": $.su.CHAR.DATE.TUES,
+        "wed": $.su.CHAR.DATE.WED,
+        "thu": $.su.CHAR.DATE.THUR,
+        "fri": $.su.CHAR.DATE.FRI,
+        "sat": $.su.CHAR.DATE.SAT,
+        "sun": $.su.CHAR.DATE.SUN
+    };
+
+    var monthObj = {
+        "1": $.su.CHAR.DATE.JAN,
+        "2": $.su.CHAR.DATE.FEB,
+        "3": $.su.CHAR.DATE.MAR,
+        "4": $.su.CHAR.DATE.APR,
+        "5": $.su.CHAR.DATE.MAY,
+        "6": $.su.CHAR.DATE.JUN,
+        "7": $.su.CHAR.DATE.JUL,
+        "8": $.su.CHAR.DATE.AUG,
+        "9": $.su.CHAR.DATE.SEP,
+        "10": $.su.CHAR.DATE.OCT,
+        "11": $.su.CHAR.DATE.NOV,
+        "12": $.su.CHAR.DATE.DEC
+    };
+
+    var timeZoneObj = {
+        "0": 'GMT-12:00',
+        "60": 'GMT-11:00',
+        "120": 'GMT-10:00',
+        "180": 'GMT-09:00',
+        "240": 'GMT-08:00',
+        "300": 'GMT-07:00',
+        "360": 'GMT-06:00',
+        "420": 'GMT-05:00',
+        "450": 'GMT-04:30',
+        "480": 'GMT-04:00',
+        "510": 'GMT-03:30',
+        "540": 'GMT-03:00',
+        "600": 'GMT-02:00',
+        "660": 'GMT-01:00',
+        "720": 'GMT'      ,
+        "780": 'GMT+01:00',
+        "840": 'GMT+02:00',
+        "900": 'GMT+03:00',
+        "930": 'GMT+03:30',
+        "960": 'GMT+04:00',
+        "990": 'GMT+04:30',
+        "1020": 'GMT+05:00',
+        "1050": 'GMT+05:30',
+        "1065": 'GMT+05:45',
+        "1080": 'GMT+06:00',
+        "1110": 'GMT+06:30',
+        "1140": 'GMT+07:00',
+        "1200": 'GMT+08:00',
+        "1260": 'GMT+09:00',
+        "1290": 'GMT+09:30',
+        "1320": 'GMT+10:00',
+        "1380": 'GMT+11:00',
+        "1440": 'GMT+12:00',
+        "1500": 'GMT+13:00'
+    };
+
+    var dayObj = {
+        "1": $.su.CHAR.ORDER["1ST_"],
+        "2": $.su.CHAR.ORDER["2ND"],
+        "3": $.su.CHAR.ORDER["3RD"]
+    };    
+
+    var timeSettingProxy = new $.su.Proxy({
+        url: URL_TIME_SETTING,
+        autoLoad: false
+    });
+
+    var timeSystem = 0;
+    var showSysTime = function(e, input, msg){
+        clearInterval(timeSystem);
+
+        var timeFormat = function(date){
+            //console.log(date);
+
+            var d = "";
+            var dd = date.date.split("/");
+            var m = parseInt(dd[0], 10);
+            var dt = parseInt(dd[1], 10);
+            var y = dd[2];
+
+            d += y + "年 ";
+            d += m + "月 ";
+            d += dt + "日 ";
+            d += weekObj[date.day.toLowerCase()] + " "; 
+            d += date.time + " ";
+            d += timeZoneObj[date.timezone];
+
+
+            var inHTML =    "<span class=\"label\">"+$.su.CHAR.TIME_MNGT.SYSTEM_TIME+":"+"</span>";
+                inHTML +=   "<span>";
+                inHTML +=   d;
+                inHTML +=   "</span>";
+            return inHTML;
+        };
+
+
+        function format(t){
+            var tString = t.toString();
+            if(t < 10){
+                tString = "0" + tString;
+            }
+            return tString;
+        }
+
+        timeSettingProxy.read({}, function(data){
+            if (data){
+                var d = {
+                    date: data.date,
+                    day: data.day,
+                    time: data.time,
+                    timezone: data.timezone
+                };
+
+                var t = timeFormat(d);
+                msg.msg("setTitle", t);
+
+                timeSystem = setInterval(function(){
+                    var t = d.time.split(":");
+                    var second = parseInt(t[2], 10);
+                    var min = parseInt(t[1], 10);
+                    var hour = parseInt(t[0], 10);
+                    /*秒数进位*/
+                    if(59 == second){
+                        second = 0;
+                        min++;
+                    }else{
+                        second++;
+                    }
+                    if(60 == min){
+                        min = 0;
+                        hour++;
+                    }
+                    if(24 == hour){
+                        hour = 0;
+                    }
+
+                    /*秒数补0*/
+                    d.time = format(hour) + ":" + format(min) + ":" + format(second);
+                    var t = timeFormat(d);
+                    msg.msg("setTitle", t);
+                }, 1*1000);
+            };
+        });
+    };
+
+    var stopSysTime = function(){
+        clearInterval(timeSystem);
+    };
+
+    var tSeg = "";
+
+    //12个时间段
+    for(var i = 1 ; i <= 12 ; i++){
+        tSeg += "<li class=\"block\">";
+        tSeg +=     "<input id=\"time" + i + "\" name=\"time" + i + "\" value=\"\"/>";
+        tSeg +=     "<button id=\"time" + i + "M\" name=\"time" + i + "\" class=\"times del-time\"></button>";
+        tSeg += "</li>";
+    }               
+
+    $("ul#time_seg").html(tSeg);
+
+    $("#weekdays").checkbox({
+        fieldLabel:$.su.CHAR.TIME_MNGT.WEEKDAYS,
+        columns:7,
+        disable:true,
+        items: [
+            {boxlabel: $.su.CHAR.TIME_MNGT.MON, inputValue: "mon", uncheckedValue: "", name:"mon"},
+            {boxlabel: $.su.CHAR.TIME_MNGT.TUE, inputValue: "tue", uncheckedValue: "", name:"tue"},
+            {boxlabel: $.su.CHAR.TIME_MNGT.WED, inputValue: "wed", uncheckedValue: "", name:"wed"},
+            {boxlabel: $.su.CHAR.TIME_MNGT.THU, inputValue: "thu", uncheckedValue: "", name:"thu"},  
+            {boxlabel: $.su.CHAR.TIME_MNGT.FRI, inputValue: "fri", uncheckedValue: "", name:"fri"},         
+            {boxlabel: $.su.CHAR.TIME_MNGT.SAT, inputValue: "sat", uncheckedValue: "", name:"sat"},            
+            {boxlabel: $.su.CHAR.TIME_MNGT.SUN, inputValue: "sun", uncheckedValue: "", name:"sun"}                  
+        ]
+    });
+
+    $("input#fromHour").textbox({
+        fieldLabel:$.su.CHAR.TIME_MNGT.TIME_SEG,
+        cls:"inline xxs",
+        //allowBlank:false,
+        inputCls:"xxxs lp",
+        maxLength:2,
+        vtype:{
+            vtype:"number",
+            min:0,
+            max:23
+            }
+        
+    }).on("ev_change", function(e, newValue){
+        if(2 == newValue.length && $("input#fromHour").textbox("validate") != false){
+            $("input#fromMin").textbox("setFocus");
+            $("input#fromMin").focus();
+        }
+        
+    });
+
+    $("input#fromMin").textbox({
+        labelCls:"xxxxs",
+        fieldLabel:":&nbsp",
+        separator:"",
+        cls:"inline xxs",
+        //allowBlank:false,
+        inputCls:"xxxs lp",
+        maxLength:2,
+        vtype:{
+            vtype:"number",
+            min:0,
+            max:59
+            }
+    }).on("ev_change", function(e, newValue){
+        if($("input#fromHour").textbox("getValue") == "24" && newValue!= "" && parseInt(newValue) != 0){
+            $("input#fromMin").textbox("setError", "时间不能超过24:00");
+            return false;
+        }
+        if(2 == newValue.length && $("input#fromMin").textbox("validate") != false){
+            $("input#toHour").textbox("setFocus");
+            $("input#toHour").focus();
+        }
+        
+        
+    });
+
+    $("input#toHour").textbox({
+        fieldLabel:"-&nbsp",
+        separator:"",
+        labelCls:"xxxxs",
+        cls:"inline xxs",
+        //allowBlank:false,
+        inputCls:"xxxs lp",
+        maxLength:2,
+        vtype:{
+            vtype:"number",
+            min:0,
+            max:24
+            }
+    }).on("ev_change", function(e, newValue){
+        
+        if(2 == newValue.length && $("input#toHour").textbox("validate") != false){
+            $("input#toMin").textbox("setFocus");
+            $("input#toMin").focus();
+        }
+        
+        
+    });
+
+    $("input#toMin").textbox({
+        labelCls:"xxxxs",
+        fieldLabel:":&nbsp",
+        separator:"",
+        cls:"inline xxs",
+        //allowBlank:false,
+        inputCls:"xxxs lp",
+        maxLength:2,
+        vtype:{
+            vtype:"number",
+            min:0,
+            max:59
+            }
+    }).on("ev_change", function(e, newValue){
+        if($("input#toHour").textbox("getValue") == "24" && newValue!= "" &&  parseInt(newValue) != 0){
+            $("input#toMin").textbox("setError", "时间不能超过24:00");
+            return false;
+        }
+    });
+
+
+    var time1 = $("input#time1").textbox({
+        //fieldLabel:"时间段1",
+        cls:"inline",
+        readOnly:"ture"
+    });
+
+    var time1M = $("button#time1M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var time2 = $("input#time2").textbox({
+        //fieldLabel:"时间段2",
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time2M = $("button#time2M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var time3 = $("input#time3").textbox({
+        //fieldLabel:"时间段3",
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time3M = $("button#time3M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var time4 = $("input#time4").textbox({
+        //fieldLabel:"时间段4",
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time4M = $("button#time4M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+
+    var time5 = $("input#time5").textbox({
+        //fieldLabel:"时间段5",
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time5M = $("button#time5M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+
+    var time6 = $("input#time6").textbox({
+        //fieldLabel:"时间段6",
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time6M = $("button#time6M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+
+    var time7 = $("input#time7").textbox({
+        //fieldLabel:"时间段7",
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time7M = $("button#time7M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+
+    var time8 = $("input#time8").textbox({
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time8M = $("button#time8M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var time9 = $("input#time9").textbox({
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time9M = $("button#time9M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var time10 = $("input#time10").textbox({
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time10M = $("button#time10M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var time11 = $("input#time11").textbox({
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time11M = $("button#time11M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var time12 = $("input#time12").textbox({
+        cls:"inline",
+        readOnly:"ture"
+    });
+    var time12M = $("button#time12M").button({
+        cls:"inline",
+        text:"-"
+    });
+
+    var cuSet = $("#custom_set").fieldset({
+        fields: [
+            {name: "weekdays"},
+            {name: "fromHour"},
+            {name: "fromMin"},
+            {name: "toHour"},
+            {name: "toMin"},
+            {name: "addTime"},
+            {name: "time1"},
+            {name: "time2"},
+            {name: "time3"},
+            {name: "time4"},
+            {name: "time5"},
+            {name: "time6"},
+            {name: "time7"},
+            {name: "time8"},
+            {name: "time9"},
+            {name: "time10"},
+            {name: "time11"},
+            {name: "time12"}
+        ]
+    });
+
+    var caSet = $("#calendar_set").fieldset({
+        fields:[
+            {name: "slots"}
+        ]
+    });
+
+    /*时间补0*/
+    function timeParse(text){
+        var time = parseInt(text);
+        if(time < 10){
+            text = "0" + time.toString(); 
+        }
+        return text;
+    }
+    
+    /*时间组件刷新*/
+    function timeRenew(){
+        
+        for (var i = 1; i <= 12; i++){
+            var obj = "input#time" + i.toString();
+            var btn = "button#time" + i.toString() + "M";
+            $(obj).textbox("hide");
+            $(btn).button("hide");
+        }
+
+        for (var i = 1; i <= timeSegment.length; i++){
+            obj = "input#time" + i.toString();
+            btn = "button#time" + i.toString() + "M";
+            $(obj).textbox("show");
+            $(btn).button("show");
+            var timeString = timeSegment[i-1].fHour + ":" + timeSegment[i-1].fMin + " - " + timeSegment[i-1].tHour + ":" + timeSegment[i-1].tMin ;
+            $(obj).textbox("setValue", timeString);
+        }
+        
+    }
+
+    /*添加一个时间段*/
+    $("#addTime").button({
+        cls:"inline",
+        text:"+"
+    }).click(function(){        
+        if(timeSegment.length >= 12){
+            if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                $.su.app.errorOperation.denied(800);
+            }
+            return false;
+        }
+        
+        if(!$("input#fromHour").textbox("validate") || $("input#fromHour").textbox("getValue") == ""){
+            return false;
+        }
+        if(!$("input#toHour").textbox("validate") || $("input#toHour").textbox("getValue") == ""){
+            return false;
+        }
+        if(!$("input#fromMin").textbox("validate") || $("input#fromMin").textbox("getValue") == ""){
+            return false;
+        }
+        if(!$("input#toMin").textbox("validate") || $("input#toMin").textbox("getValue") == ""){
+            return false;
+        }
+        /*24为小时时，分钟只能为0*/
+        
+        if("24" == $("input#toHour").textbox("getValue")){
+            if("00" != $("input#toMin").textbox("getValue") && "0" != $("input#toMin").textbox("getValue")){
+                $("input#toMin").textbox("setError", "时间不能超过24:00");
+                return false;
+            }
+        }
+        
+        var fromHour = timeParse($("input#fromHour").textbox("getValue"));
+        var fromMin = timeParse($("input#fromMin").textbox("getValue"));
+        var fromTime = parseInt(fromHour) * 60 + parseInt(fromMin);
+        var toHour = timeParse($("input#toHour").textbox("getValue"));
+        var toMin = timeParse($("input#toMin").textbox("getValue"));
+        var toTime = parseInt(toHour) * 60 + parseInt(toMin);
+
+        if(toTime <= fromTime){
+            if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                $.su.app.errorOperation.denied(801);
+            }
+            return false;
+        }
+        
+        var timeObj = {
+            fHour : fromHour,
+            fMin : fromMin,
+            fTime : fromTime,
+            tHour : toHour,
+            tMin : toMin,
+            tTime : toTime
+        };
+
+
+        for(var i = 0; i < timeSegment.length; i++){
+            if(!(timeObj.tTime <= timeSegment[i].fTime || timeObj.fTime >= timeSegment[i].tTime)){
+                if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                    $.su.app.errorOperation.denied(804);
+                }
+                return false;
+            }
+        }        
+        timeCount =  timeSegment.push(timeObj);
+        //console.log(timeSegment)
+        timeRenew();
+
+        $("#fromHour").textbox("setValue", "");
+        $("#toHour").textbox("setValue", "");
+        $("#fromMin").textbox("setValue", "");
+        $("#toMin").textbox("setValue", "");
+    });
+
+    /*删除一个时间段*/
+    $(".del-time").click(function(){
+        me = this;
+        var rownuber = parseInt($(me).attr('id').match(/[0-9]{1,}/));
+        timeSegment.splice(rownuber-1, 1);
+        timeRenew();
+    });
+
+
+    $("input#slots").timepicker({
+        fieldLabel: $.su.CHAR.TIME_MNGT.CALENDAR,
+        cls: 'time-settings'
+    }).on("ev_beforeshow", showSysTime).on("ev_close", stopSysTime);
+    
+
+    var time_mode = $("#time_mode").radio({
+        fieldLabel: $.su.CHAR.TIME_MNGT.SET,
+        columns: 2,
+        items:[
+            {boxlabel: $.su.CHAR.TIME_MNGT.INPUT, name:'time_mode', inputValue: 'input'},
+            {boxlabel: $.su.CHAR.TIME_MNGT.CALENDAR, name:'time_mode', inputValue:'calendar'}
+        ]
+    }).on('ev_change', function(e, oldValue, newValue){
+        switch(newValue)
+        {
+            case "calendar":
+                cuSet.fieldset("hide");
+                caSet.fieldset("show");
+                break;
+            case "input":
+                caSet.fieldset("hide");
+                cuSet.fieldset("show");
+                break;
+        }
+    });
+
+/*-------------------------- time end ----------------------------------*/
+
+    var index = $("#index").textbox({
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.INDEX,     
+        allowBlank: true,
+        vtype:"number",
+        tips: $.su.CHAR.POLICY_ROUTE.OPTIONAL
+    });
+
+    var state = $("#state").switchbutton({   
+        fieldLabel: $.su.CHAR.POLICY_ROUTE.STATUS
+    });
+
+    var policy_store = new $.su.Store({
+        proxy: policy_rule_Proxy,
+        fields: [
+                {name: "name", mapping: "name"},
+                {name: "group_name", mapping: "group_name"},
+                {name: "service_type", mapping: "service_type"},
+                {name: "proto", mapping:"proto"},
+                {name: "sport", mapping:"sport"},
+                {name: "dport", mapping:"dport"},
+                {name: "code", mapping:"code"},
+                {name: "type", mapping:"type"},
+                {name: "other", mapping:"other"},
+                {name: "src_ipgroup", mapping: "src_ipgroup"},
+                {name: "src_ipstart", mapping:"src_ipstart"},
+                {name: "src_ipend", mapping:"src_ipend"},
+                {name: "dst_ipgroup", mapping: "dst_ipgroup"},
+                {name: "dst_ipstart", mapping:"dst_ipstart"},
+                {name: "dst_ipend", mapping:"dst_ipend"},
+                {name: "interfaces", mapping: "interfaces"},
+                {name: "timeobj", mapping: "timeobj"},
+                {name: "time_mode", mapping: "time_mode"},              
+                {name: "state", mapping: "state"},
+                {name: "index", mapping: "index"},
+                {name: "slots", mapping: "slots"}
+        ],
+        autoLoad: true
+    });
+    var ruleGrid = $("#policy_rule_grid").grid({        
+        store:policy_store,
+        paging:[],
+        editor: {
+            content:"#policy_rule",
+            fields: [
+                {name: "name", mapping: "name"},
+                {name: "group_name", mapping: "group_name"},
+                {name: "service_type", mapping: "service_type"},
+                {name: "proto", mapping:"proto"},
+                {name: "sport", mapping:"sport"},
+                {name: "dport", mapping:"dport"},
+                {name: "code", mapping:"code"},
+                {name: "type", mapping:"type"},
+                {name: "other", mapping:"other"},
+                {name: "src_ipgroup", mapping: "src_ipgroup"},
+                {name: "src_ipstart", mapping:"src_ipstart"},
+                {name: "src_ipend", mapping:"src_ipend"},
+                {name: "dst_ipgroup", mapping: "dst_ipgroup"},
+                {name: "dst_ipstart", mapping:"dst_ipstart"},
+                {name: "dst_ipend", mapping:"dst_ipend"},
+                {name: "interfaces", mapping: "interfaces"},
+                {name: "timeobj", mapping: "timeobj"},
+                {name: "time_mode", mapping: "time_mode"},               
+                {name: "state", mapping: "state"},
+                {name: "index", mapping: "index"},
+                {name: "slots", mapping: "slots"}
+            ],
+            validator:function(e){
+                var src_box = src_ipgroup.combobox("getValue");
+                var dst_box = dst_ipgroup.combobox("getValue");
+
+                if(src_box[0] == "self_define_src")
+                {
+                    var ipStart = $("input#src_start_ip").textbox('getValue');
+                    var ipEnd = $("input#src_end_ip").textbox('getValue');
+                    if(ipStart == "" || ipEnd == "")
+                    {
+                        $('input#src_end_ip').textbox('setError',$.su.CHAR.POLICY_ROUTE.NOT_NULL);
+                        return false;
+                    }
+                    if( $.su.func.ipToInt(ipStart) > $.su.func.ipToInt(ipEnd)){
+                        $('input#src_end_ip').textbox('setError',$.su.CHAR.POLICY_ROUTE.END_LT_BEGIN);
+                        return false;
+                    }
+                }   
+
+                if(dst_box[0] == "self_define_dst")
+                {
+                    var ipStart = $("input#dst_start_ip").textbox('getValue');
+                    var ipEnd = $("input#dst_end_ip").textbox('getValue');
+                    if(ipStart == "" || ipEnd == "")
+                    {
+                        $('input#dst_end_ip').textbox('setError',$.su.CHAR.POLICY_ROUTE.NOT_NULL);
+                        return false;
+                    }
+                    if( $.su.func.ipToInt(ipStart) > $.su.func.ipToInt(ipEnd)){
+                        $('input#dst_end_ip').textbox('setError',$.su.CHAR.POLICY_ROUTE.END_LT_BEGIN);
+                        return false;
+                    }
+                }     
+
+                if("input" == time_mode.radio("getValue")){
+                    /*手动输入时间格式判断*/
+                    if (!$("input#fromHour").textbox("validate") || !$("input#fromMin").textbox("validate") 
+                        || !$("input#toHour").textbox("validate") || !$("input#toMin").textbox("validate")){
+                        return false;
+                    }
+
+                    if("24" == $("input#toHour").textbox("getValue")){
+                        $("input#toMin").textbox("setValue", "00");
+                    }
+                    /*没点加号的也加入数组中*/
+                    var fromHour = timeParse($("input#fromHour").textbox("getValue"));
+                    var fromMin = timeParse($("input#fromMin").textbox("getValue"));
+                    var fromTime = parseInt(fromHour) * 60 + parseInt(fromMin);
+                    var toHour = timeParse($("input#toHour").textbox("getValue"));
+                    var toMin = timeParse($("input#toMin").textbox("getValue"));
+                    var toTime = parseInt(toHour) * 60 + parseInt(toMin);
+
+                    if("" != fromHour && "" != fromMin && "" != toHour && "" != toMin){
+                        if(toTime <= fromTime){
+                            if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                                $.su.app.errorOperation.denied(801);
+                            }
+                            return false;
+                        }                        
+
+                        var timeObj = {
+                            fHour : fromHour,
+                            fMin : fromMin,
+                            fTime : fromTime,
+                            tHour : toHour,
+                            tMin : toMin,
+                            tTime : toTime
+                        };
+
+                        if(timeSegment.length < 12){
+                           timeCount =  timeSegment.push(timeObj);
+                           timeRenew(); 
+                        }    
+                    }else if(timeSegment.length == 0){
+                        $(ruleGrid.grid("getEditor")).form('setError', "&nbsp&nbsp时间段不能为空");
+                        return false;
+                    }
+                    
+                    /*按开始时间进行排序*/
+                    timeSegment.sort(function(a, b){
+                        return a.fTime - b.fTime;
+                    });
+                    /*合并时间段*/
+                    for(var i = 0; i < timeSegment.length - 1; i++){
+                        //如果当前结束时间大于等于下一段时间的开始，则合并
+                        if(timeSegment[i].tTime >= timeSegment[i+1].fTime){
+                            //下一段的开始等于本段开始
+                            timeSegment[i+1].fTime = timeSegment[i].fTime;
+                            timeSegment[i+1].fHour = timeSegment[i].fHour;
+                            timeSegment[i+1].fMin = timeSegment[i].fMin;
+                            //下一段的结束等于本段结束和下段结束时间中的较大值
+                            if(timeSegment[i].tTime > timeSegment[i+1].tTime){
+                                timeSegment[i+1].tTime = timeSegment[i].tTime;
+                                timeSegment[i+1].tHour = timeSegment[i].tHour;
+                                timeSegment[i+1].tMin = timeSegment[i].tMin;
+                            } 
+                            //删除本段
+                            timeSegment.splice(i, 1);
+                            //删除后元素前移一位
+                            i--;    
+                        }
+                        
+                    }
+                    timeRenew();
+
+                    /*每天的时间段字符串*/
+                    var tEvery = "[";
+                    for(var i = 0; i < timeSegment.length; i++){
+                        tEvery += "[\"" + timeSegment[i].fHour + ":" + timeSegment[i].fMin + "\",\"" + timeSegment[i].tHour + ":" + timeSegment[i].tMin + "\"]";
+                        if(i + 1 < timeSegment.length){
+                            tEvery += ",";
+                        }
+                    }
+                    tEvery += "]";
+
+                    /*每周的循环重复*/
+                    var wDays = $("#weekdays").checkbox("getValue1");
+                    timeValue = "{";
+                    for(var i = 0; i < wDays.length; i++){
+                        timeValue += "\"" + wDays[i] + "\":" + tEvery;
+                        if(i + 1 < wDays.length){
+                            timeValue += ",";
+                        }
+                    }
+                    timeValue += "}";     
+
+                    $("#slots").val(timeValue);
+                                    
+                    if("" == $("#weekdays").checkbox("getValue1")){
+                        if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                            $.su.app.errorOperation.denied(803);
+                        }
+                        return false;
+                    }
+
+                    var fromHour = timeParse($("input#fromHour").textbox("getValue"));
+                    var fromMin = timeParse($("input#fromMin").textbox("getValue"));
+                    var fromTime = parseInt(fromHour) * 60 + parseInt(fromMin);
+                    var toHour = timeParse($("input#toHour").textbox("getValue"));
+                    var toMin = timeParse($("input#toMin").textbox("getValue"));
+                    var toTime = parseInt(toHour) * 60 + parseInt(toMin);
+
+                    
+                    if("" != fromHour && "" != fromMin && "" != toHour && "" != toMin){
+                        if(toTime <= fromTime){
+                            if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                                $.su.app.errorOperation.denied(801);
+                            }
+
+                            return false;
+                        }
+                    }
+                } 
+
+                /*禁用组件传值*/
+                $("#weekdays").checkbox("disableAllItem");
+                $("input#fromHour").textbox("disable");
+                $("input#fromMin").textbox("disable");
+                $("input#toHour").textbox("disable");
+                $("input#toMin").textbox("disable");
+                $("input#time1").textbox("disable");
+                $("input#time2").textbox("disable");
+                $("input#time3").textbox("disable");
+                $("input#time4").textbox("disable");
+                $("input#time5").textbox("disable");
+                $("input#time6").textbox("disable");
+                $("input#time7").textbox("disable");
+                $("input#time8").textbox("disable");
+                $("input#time9").textbox("disable");
+                $("input#time10").textbox("disable");
+                $("input#time11").textbox("disable");
+                $("input#time12").textbox("disable");  
+
+                return true;
+            }
+        },          
+
+        columns: [
+            {
+                xtype: "checkcolumn"
+            },
+            {
+                xtype: "rownumberer"
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.RULE_NAME,  
+                dataIndex: "name"
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.OPTIONAL,  
+                dataIndex: "group_name",
+                hidden:true
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.SERVICE_TYPE,
+                dataIndex: "service_type",
+                width:180,
+                renderer:function(data){
+                    if(data == "self_service")
+                    {
+                        return "自定义";
+                    }
+                    return data;
+                }
+            },
+            {
+                dataIndex:"proto",
+                hidden:true
+            },
+            {
+                dataIndex:"sport",
+                hidden:true
+            },
+            {
+                dataIndex:"dport",
+                hidden:true
+            },
+            {
+                dataIndex:"code",
+                hidden:true
+            },
+            {
+                dataIndex:"type",
+                hidden:true
+            },
+            {
+                dataIndex:"other",
+                hidden:true
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.TIME,  
+                dataIndex: "timeobj",
+                hidden:true
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.SRC_ADDR,  
+                dataIndex: "src_ipgroup",     
+                renderer:function(dd,index,data)
+                {                
+                    if(dd == "self_define_src")
+                    {
+                        var define_ip = ""
+                        define_ip = data.src_ipstart + "-" + data.src_ipend
+                        return define_ip;
+                    }
+                        
+                    else if("IPGROUP_ANY" == dd){
+                        return $.su.CHAR.IP_GROUP_GROUP.ANY;
+                    } 
+                    else if("IPGROUP_LAN" == dd){
+                        return $.su.CHAR.IP_GROUP_GROUP.LAN;
+                    }                
+                    else
+                    {
+                        var i = 0;
+                        for(;i<src_ipgroupItem.length;i++)
+                        {
+                            if(dd == src_ipgroupItem[i].value)
+                                return src_ipgroupItem[i].name;
+                        }
+                    }
+
+                    return dd;
+                }
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.DST_ADDR,        
+                dataIndex: "dst_ipgroup",      
+                renderer:function(dd,index,data)
+                {
+                    if(dd == "self_define_dst")
+                    {
+                        var define_ip = ""
+                        define_ip = data.dst_ipstart + "-" + data.dst_ipend
+                        return define_ip; 
+                    }                        
+                    else if("IPGROUP_ANY" == dd){
+                        return $.su.CHAR.IP_GROUP_GROUP.ANY;
+                    }                   
+                    else
+                    {
+                        var i = 0;
+                        for(;i<dst_ipgroupItem.length;i++)
+                        {
+                            if(dd == dst_ipgroupItem[i].value)
+                                return dst_ipgroupItem[i].name;
+                        }
+                    }
+                    return dd;
+                }
+            },
+            {
+                dataIndex:"src_ipstart",
+                hidden:true
+            },
+            {
+                dataIndex:"src_ipend",
+                hidden:true
+            },
+            {
+                dataIndex:"dst_ipstart",
+                hidden:true
+            },
+            {
+                dataIndex:"dst_ipend",
+                hidden:true
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.INTERFACE,
+                dataIndex: "interfaces"
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.TIME,     
+                dataIndex: "time_mode",
+                hidden:true
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.INDEX,
+                dataIndex: "index",
+                hidden:true
+            }, 
+             {
+                text: $.su.CHAR.POLICY_ROUTE.TIME,
+                width:80,
+                dataIndex: "slots",
+                xtype: "actioncolumn",
+                items: [
+                    {
+                        xtype: "timepicker",
+                        cls: "time-settings",
+                        inputCls: "time-settings",
+                        fieldLabel: null,
+                        viewOnly: true
+                    }
+                ]
+            },
+            {
+                text: $.su.CHAR.POLICY_ROUTE.STATUS,
+                xtype: "statuscolumn",
+                dataIndex: "state"
+            },           
+            {
+                xtype: "settings"
+            }
+
+        ],
+        operation: 'prompt|search|delete'
+    }).on("ev_load", function(e,data, others){
+        /*先隐藏，防止窗口抖动*/
+        cuSet.fieldset("hide");
+        caSet.fieldset("hide");
+        time1.textbox("hide");
+        time2.textbox("hide");
+        time3.textbox("hide");
+        time4.textbox("hide");
+        time5.textbox("hide");
+        time6.textbox("hide");
+        time7.textbox("hide");
+        time8.textbox("hide");
+        time9.textbox("hide");
+        time10.textbox("hide");
+        time11.textbox("hide");
+        time12.textbox("hide");
+        time1M.button("hide");
+        time2M.button("hide");
+        time3M.button("hide");
+        time4M.button("hide");
+        time5M.button("hide");
+        time6M.button("hide");
+        time7M.button("hide");
+        time8M.button("hide");
+        time9M.button("hide");
+        time10M.button("hide");
+        time11M.button("hide");
+        time12M.button("hide");
+        if(others)
+        {
+            maxrules = others.max_rules;
+        }       
+
+        for (var i = 0; i < data.length; i++){          
+                //使用手动输入的时间不显示图标 
+
+            if (data[i].time_mode === "input")
+            {
+                //隐藏时间图标    
+                    var tarTr = $("tr.grid-content-tr.grid-content-tr-" + data[i].key);
+                    tarTr.find("div.timepicker-container").hide();
+                        //显示自定义的时间段
+                var html = "";
+                var sEvery = "高危";//$.su.CHAR.TIME_MNGT.INPUT;
+                html += sEvery;
+                tarTr.find("td.grid-content-td-action-column div.grid-content-td-wrap").html(html).css("lineHeight","20px");
+
+            }    
+        }
+
+    }).on("ev_insert", function(e, index, data){
+        //ruleGrid.grid("getStore").load(); 
+    }).on("ev_remove", function(e, index, data){
+        ruleGrid.grid("getStore").load();      
+    }).on("ev_update", function(e, index, data){
+        //ruleGrid.grid("getStore").load();
+    }).on("ev_complete", function(e, index, data){
+
+        if (data.time_mode === "input"){
+
+            var tarTr = $("tr.grid-content-tr.grid-content-tr-" + data.key);
+            tarTr.find("div.timepicker-container").hide();
+            var html = "";
+            var fFlag = true;
+            var sEvery = "高危";//$.su.CHAR.TIME_MNGT.INPUT;
+
+            html += sEvery;         
+            tarTr.find("td.grid-content-td-action-column div.grid-content-td-wrap").html(html).css("lineHeight","20px");
+        }       
+
+        ruleGrid.grid("getStore").load();
+    });
+
+        var i;
+        var editor = ruleGrid.grid('getEditor');
+        var combobox;
+
+        /*发送form请求,获取服务类型列表*/
+        var serviceItem=[];
+        var serviceProxy = new $.su.Proxy({
+                url: $.su.url('/admin/service?form=service'),
+                async: false   
+        });  
+        serviceProxy.read({}, function(data){ 
+                for (i=0; i<data.length; i++){
+                    serviceItem.push({name:data[i].name,value:data[i].name});                       
+                } 
+
+                serviceItem.push({name:"自定义",value:"self_service"});
+                combobox = $(editor).find('.combobox-value[name=service_type]');
+                combobox.combobox('loadData',serviceItem);
+        });
+
+
+        //发送form请求,获取ip地址组对象，提供给规则group下拉框*/
+        var src_ipgroupItem=[];
+        var dst_ipgroupItem=[];
+        var ipgroupProxy = new $.su.Proxy({
+            url: $.su.url('/admin/ipgroup?form=ipgroup_list'),
+            async: false
+        });
+
+        ipgroupProxy.read({}, function(data){
+            var flag=0;
+            for (i=0; i<data.length; i++){
+
+                if(data[i].flag == "hidden") continue;
+                if(data[i].name == "IPGROUP_ANY")
+                {
+                    src_ipgroupItem.push({name:$.su.CHAR.IP_GROUP_GROUP.ANY,value:data[i].name});
+                    dst_ipgroupItem.push({name:$.su.CHAR.IP_GROUP_GROUP.ANY,value:data[i].name});
+                }                
+                else if(data[i].name =="IPGROUP_LAN")
+                {
+                    src_ipgroupItem.push({name:$.su.CHAR.IP_GROUP_GROUP.LAN,value:data[i].name});
+                }                
+                else
+                {
+                    src_ipgroupItem.push({name: data[i].textname,value: data[i].name});
+                    dst_ipgroupItem.push({name: data[i].textname,value: data[i].name});  
+                }
+            }
+        });
+
+        src_ipgroupItem.push({name:$.su.CHAR.POLICY_ROUTE.SELF_DEFINE,value:"self_define_src"});
+        if (src_ipgroupItem.length != 0){
+            src_ipgroup.combobox("loadData", src_ipgroupItem);
+        }
+
+        dst_ipgroupItem.push({name:$.su.CHAR.POLICY_ROUTE.SELF_DEFINE,value:"self_define_dst"});
+        if (dst_ipgroupItem.length != 0){
+            dst_ipgroup.combobox("loadData", dst_ipgroupItem);
+        }
+
+
+        /*发送form请求,获取interface列表.用于显示于接口下拉框*/
+        var interfaceItem=[];
+        var interfaceProxy = new $.su.Proxy({
+                url: $.su.url('/admin/interface?form=status'),
+                async: false
+        });     
+        interfaceProxy.read({}, function(data){ 
+                for (i=0; i<data.normal.length; i++){
+                    //interfaceItem.push({name:data.normal[i].t_name,value:data.normal[i].t_name});   
+
+                    if(data.normal[i].t_name != "LAN")
+                    {    
+                        interfaceItem.push({name:data.normal[i].t_name,value:data.normal[i].t_name});     
+                    }                    
+                }
+                for (i=0; i<data.vpn.length; i++){                       
+                    interfaceItem.push({name:data.vpn[i].t_name,value:data.vpn[i].t_name}); 
+                }                       
+
+                combobox = $(editor).find('.combobox-value[name=interfaces]');
+                combobox.combobox('loadData',interfaceItem);
+        });    
+
+        var editor1 = ruleGrid.grid('getEditor');
+
+        $(editor1).on("ev_startEdit", function(e,editingIndex,editingId){
+            //console.log(editingIndex);
+
+            var aa = $('#src_ipgroup').combobox("getValue");
+            if(aa[0] == "self_define_src")
+            {
+                $('#self_define_src').show();
+                $("#src_start_ip").textbox("enable");
+                $("#src_end_ip").textbox("enable");
+                
+            }
+            else
+            {
+                $('#self_define_src').hide();
+                $("#src_start_ip").textbox("disable");
+                $("#src_end_ip").textbox("disable");
+
+            }
+
+            var bb = $('#dst_ipgroup').combobox("getValue");
+            if(bb[0] == "self_define_dst")
+            {
+                $('#self_define_dst').show();
+                $("#dst_start_ip").textbox("enable");
+                $("#dst_end_ip").textbox("enable");
+            }
+            else
+            {
+                $('#self_define_dst').hide();
+                $("#dst_start_ip").textbox("disable");
+                $("#dst_end_ip").textbox("disable");
+            }
+
+            /*清空文本框*/
+            $("#weekdays").checkbox("reset");
+            $("input#fromHour").textbox("setValue","");
+            $("input#fromMin").textbox("setValue","");
+            $("input#toHour").textbox("setValue","");
+            $("input#toMin").textbox("setValue","");
+            timeSegment.splice(0, timeSegment.length);
+            timeRenew(); 
+          
+            switch(time_mode.radio("getValue")){
+                case "calendar":
+                    cuSet.fieldset("hide");
+                    caSet.fieldset("show");
+                break;
+                case "input":
+                    caSet.fieldset("hide");
+                    cuSet.fieldset("show");
+                    //显示自定义的时间段
+                    var store = ruleGrid.grid("getStore");
+                    var data = store.data;                 
+
+                    if(editingIndex == "add")
+                        break;
+                    var timeSlots = JSON.parse(data[editingIndex].slots);
+                    var weekdays = [];
+                    var fFlag = true;
+                    //数据回显,设置周循环及每天时段
+                    for(var x in timeSlots){
+                        weekdays.push(x);
+                        $("#weekdays").checkbox("setValue", weekdays);
+                        if(fFlag){
+                            var tEvery =  timeSlots[x];
+                            //console.log(tEvery[0]);
+                            for(var j = 0; j < tEvery.length; j++){
+                                var fromHour = tEvery[j][0].split(":")[0];
+                                var fromMin  = tEvery[j][0].split(":")[1];
+                                var fromTime = parseInt(fromHour) * 60 + parseInt(fromMin);
+                                var toHour = tEvery[j][1].split(":")[0];
+                                var toMin  = tEvery[j][1].split(":")[1];
+                                var toTime = parseInt(toHour) * 60 + parseInt(toMin);
+                                
+                                var timeObj = {
+                                    fHour : fromHour,
+                                    fMin : fromMin,
+                                    fTime : fromTime,
+                                    tHour : toHour,
+                                    tMin : toMin,
+                                    tTime : toTime
+                                };
+                                timeSegment.push(timeObj);
+                                
+                            }
+                            fFlag = false;
+                        }
+                    }
+
+                    timeRenew();
+
+
+                break;
+            }
+
+            var cc = $("#service_type").combobox("getValue");
+            if(cc[0] == "self_service")
+            {
+                    $('#service_div').form("show");
+                    $('#proto').radio("enable");
+                    var newValue = $("#proto").radio("getValue");
+                    //console.log(newValue);
+                    if(newValue === 'icmp'){
+                        $('div#div_protocol_port').hide();
+                        $('div#div_icmp').form("show");
+                        $('div#div_other').form("hide");
+
+                        $("input#sport").textbox('disable');
+                        $("input#dport").textbox('disable');
+                        $("input#type").textbox('enable');
+                        $("input#code").textbox('enable');
+                        $("input#other").textbox('disable');                                   
+                                 
+                    }
+                    else if(newValue === "other"){
+                        $('div#div_protocol_port').form("hide");
+                        $('div#div_icmp').form("hide");
+                        $('div#div_other').form("show");
+
+                        $("input#sport").textbox('disable');
+                        $("input#dport").textbox('disable');
+                        $("input#type").textbox('disable');
+                        $("input#code").textbox('disable');
+                        $("input#other").textbox('enable');
+                        
+                        // $("input#other").textbox("setValue", "");
+                    }
+                    else if(newValue === "tcp" || newValue === "udp" || newValue === "tcp-udp")
+                    {
+                        $('div#div_protocol_port').form("show");
+                        $('div#div_icmp').form("hide");
+                        $('div#div_other').form("hide");
+
+                        $("input#sport").textbox('enable');
+                        $("input#dport").textbox('enable');
+                        $("input#type").textbox('disable');
+                        $("input#code").textbox('disable');
+                        $("input#other").textbox('disable');                    
+                    }
+            }
+            else
+            {
+                $('#service_div').hide();
+                $('div#div_protocol_port').form("hide");
+                $('div#div_icmp').form("hide");
+                $('div#div_other').form("hide");
+
+                $("input#proto").radio("disable");
+                $("input#sport").textbox('disable');
+                $("input#dport").textbox('disable');
+                $("input#type").textbox('disable');
+                $("input#code").textbox('disable');
+                $("input#other").textbox('disable');            
+            }
+    });
+
+
+    var helpIspRouting = new $.su.Help({
+        container: "div#policy_routing_hlep",
+        content: ["NOTHING_CONFIG"]
+    });
+});
+</script>
+</body>
+
+</html>

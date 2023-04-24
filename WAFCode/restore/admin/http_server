@@ -1,0 +1,8 @@
+{
+	"id": 1,
+		"others": {                  
+		"max_rules": 8            
+	}, 
+	"result":[{"textname":"后台服务器1","mac":"192.168.1.1","http_port":"80"}], 
+	"error_code": "0"
+}

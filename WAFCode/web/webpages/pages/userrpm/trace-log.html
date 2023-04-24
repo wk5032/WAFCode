@@ -1,0 +1,674 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>MAC Filtering</title>
+<style type="text/css">
+    #preview-frame{
+        border: none;
+        width: 400px;
+        height: 600px;
+    }
+</style>
+</head>
+
+<body>
+<div class="func-container">
+    <div id="func_setting">
+        <form id="mac_filtering_settings">
+            <input id="mac_filtering_enable" name="enable" value=""/>
+            <input id="mac_filtering_mode" name="filter_mode" value=""/>
+            <input id="interfaces" name="interfaces" value=""/>
+        </form>
+    </div>
+
+    <div id="own_editor">
+        <input type="text"  id="time_set_date" name="date" value="" />    
+       	<input id="time_set_year" name="time_set_year"/>
+	    	<input id="time_set_month" name="time_set_month"/>
+	    	<input id="time_set_day" name="time_set_day"/>
+	    	<input type="text"  id="time_set_time" name="time" value="" />
+	    	<br>
+	    	<input type="text"  id="end_time_set_date" name="end_date" value="" />   
+	    	<input id="end_time_set_year" name="end_time_set_year"/>
+	    	<input id="end_time_set_month" name="end_time_set_month"/>
+	    	<input id="end_time_set_day" name="end_time_set_day"/>
+	    	<input type="text"  id="end_time_set_time" name="end_time" value="" />
+				
+				
+	    		    
+        <input id="rule_id" name="rule_id" > 
+        <input id="src_ip" name="src_ip" >
+        <input id="http_url" name="http_url">
+            
+    </div>
+
+    <div id="mac_filtering_rule_list">
+        <div id="mac_filtering_rule_grid">
+        </div>
+    </div>
+    
+     <div id="frame-msg">
+            <iframe id="preview-frame"></iframe>
+     </div>
+        
+
+    <div id="mac_filtering_help"></div>
+</div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+    var URL_ENABLE = $.su.url('/admin/mac_filter?form=enable'),
+        URL_MODE = $.su.url('/admin/atkquery?form=mode'),
+        URL_RULE_LIST = $.su.url("/admin/tracelog?form=get_list");
+
+    $("#func_setting").panel({
+        title: "负载均衡",
+        collapsible: false,
+        help: $("#mac_filtering_help")
+    });
+    $("#func_setting").panel("hide");
+
+/*    $("#mode_setting").panel({
+        title: $.su.CHAR.MAC_FILTERING.MODE_SETTINGS,
+        collapsible: false
+    });*/
+
+    $("#mac_filtering_mode").combobox({
+        fieldLabel: $.su.CHAR.MAC_FILTERING.MODE,
+        //columns: 1,
+        //cls: 'part-seperate',
+        items:[
+            { name:$.su.CHAR.MAC_FILTERING.WHITE_MODE, value:'white',selected:true},
+            { name:$.su.CHAR.MAC_FILTERING.BLACK_MODE, value: 'black'}
+        ]
+    });
+
+    var tarContainer = $.find("div.radio-group-container");
+    var tarLabel = $(tarContainer).find("div.widget-fieldlabel-wrap");
+    $(tarLabel).hide();
+
+
+    $("#mac_filtering_enable").switchbutton({
+            fieldLabel: $.su.CHAR.MAC_FILTERING.ENABLE_FILTERING
+    }).on("ev_change", function(e, oldValue, newValue){
+        var val = (newValue[0]=="enable"||newValue[0]=="on") ? "on" : "off";
+        switch(val)
+        {
+            case "on":
+                $("#mac_filtering_mode").combobox("enable");
+                $("#interfaces").combobox("enable");
+                $("#interfaces").combobox("setValue", "LAN");
+                break;
+            case "off":
+                $("#mac_filtering_mode").combobox("disable");
+                $("#interfaces").combobox("disable");
+                break;
+        }
+    });
+
+    $("#interfaces").combobox({
+        fieldLabel:"&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp"+$.su.CHAR.ACCESS_CONTROL.ZONE,
+        multiSelect:true,
+        items:[
+            {name:"LAN",value:"LAN"}
+        ]
+    }).combobox("hide");
+    /*
+    var interfaceItem=[];
+    var interfaceProxy = new $.su.Proxy({
+            url: $.su.url('/admin/interface?form=status'),
+            async: false
+    });     
+    interfaceProxy.read({}, function(data){                     
+                var i
+                for (i=0; i<data.normal.length; i++){
+                    interfaceItem.push({name:data.normal[i].t_name,value:data.normal[i].t_name});           
+                }
+                var combobox = $('#interfaces');
+                combobox.combobox('loadData',interfaceItem); 
+    });
+*/
+
+    var modeProxy = new $.su.Proxy({
+        url: URL_MODE
+    });
+
+    $("#mac_filtering_settings").form({
+        proxy: modeProxy,
+        fields: [
+            {name: "enable", mapping: "enable"},
+            {name: "filter_mode", mapping: "filter_mode"},
+            {name: "interfaces",mapping: "interfaces"}
+        ],
+        submitBtn: "default",
+        validator: function(){
+            var interfaces = $("#interfaces").combobox("getValue");
+            var enable = $("#mac_filtering_enable").checkbox("getValue");
+            if (enable[0] == "enable" && interfaces.length == 0){
+                if ($.su.app && $.su.app.errorOperation && $.su.app.errorOperation.denied){
+                    var NO_INTERFACE_SELECT = 17000;
+                    $.su.app.errorOperation.denied(NO_INTERFACE_SELECT);
+                    return false;
+                }
+            }
+            return true;
+        }
+    });
+    
+    
+    
+    function updateDate(){
+		var year = time_year.combobox("getValue");
+		var month = time_month.combobox("getValue");
+		var day = time_day.combobox("getValue");
+		var date_str = month + "/" + day + "/" + year;
+		date_data.textbox("setValue", date_str);
+		
+		year = end_time_year.combobox("getValue");
+		month = end_time_month.combobox("getValue");
+		day = end_time_day.combobox("getValue");
+		date_str = month + "/" + day + "/" + year;
+		end_date_data.textbox("setValue", date_str);
+	}
+
+	function updateDateChoice(){
+		var year_value = time_year.combobox("getValue");
+		var year = parseInt(year_value[0]);
+		var month_value = time_month.combobox("getValue");
+		var month = parseInt(month_value[0]);
+		var day_value = time_day.combobox("getValue");
+		var day = day_value[0];
+		var isLeap = false;
+
+		if((((year % 4) == 0) && ((year % 100) != 0)) || (year % 400) == 0){
+			isLeap = true;
+		}
+
+		if(month == 2){
+			if(isLeap){
+				time_day.combobox("loadData", time_day_29);
+				end_time_day.combobox("loadData", time_day_29);
+				if(parseInt(day) > 29){
+					day = "01";
+				}
+			}else{
+				time_day.combobox("loadData", time_day_28);
+				end_time_day.combobox("loadData", time_day_28);
+				if(parseInt(day) > 28){
+					day = "01";
+				}
+			}
+
+		}else if((month % 2 == 0 && month > 7) || (month % 2 == 1 && month < 8)){
+			time_day.combobox("loadData", time_day_31);
+			end_time_day.combobox("loadData", time_day_31);
+		}else{
+			time_day.combobox("loadData", time_day_30);
+			end_time_day.combobox("loadData", time_day_30);
+		}
+		time_day.combobox("setValue", day);
+		end_time_day.combobox("setValue", day);
+	}
+
+	var time_year = $("#time_set_year").combobox({
+		fieldLabel: "开始时间",
+		inputCls:"s",
+		cls:"inline",
+		tips:"年",
+		tipsCls:"time-separator",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+		updateDateChoice();
+	});
+	
+	var time_year_arr = []; 
+	for(var i = 2018; i <= 2030; i++){
+		var year_tmp = {name: i.toString(), value:i.toString()};
+		time_year_arr.push(year_tmp);
+	}
+	time_year.combobox("loadData", time_year_arr);
+
+	var time_month = $("#time_set_month").combobox({
+		fieldLabel:"",
+		inputCls:"s",
+		labelCls:"hidden",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"月",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDateChoice();
+		updateDate();
+	});
+
+	var time_month_arr = []; 
+	for(var i = 1; i <= 12; i++){
+		if(i < 10){
+			i = "0" + i.toString();
+		}else{
+			i = i.toString();
+		}
+		var month_tmp = {name: i, value:i};
+		time_month_arr.push(month_tmp);
+	}
+	time_month.combobox("loadData", time_month_arr);
+
+	var time_day = $("#time_set_day").combobox({
+		fieldLabel: "",
+		labelCls:"hidden",
+		inputCls:"s",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"日",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+	});
+	var time_day_28 = [];
+	var time_day_29 = [];
+	var time_day_30 = [];
+	var time_day_31 = [];
+
+	for(var i = 1; i <= 31; i++){
+		if(i < 10){
+			i = "0" + i.toString();
+		}else{
+			i = i.toString();
+		}
+		var day_tmp = {name: i, value:i};
+
+		switch(i){
+			case "31":
+				time_day_31.push(day_tmp);
+				break;
+			case "30":
+				time_day_31.push(day_tmp);
+				time_day_30.push(day_tmp);
+				break;
+			case "29":
+				time_day_31.push(day_tmp);
+				time_day_30.push(day_tmp);
+				time_day_29.push(day_tmp);
+				break;
+			default:
+				time_day_31.push(day_tmp);
+				time_day_30.push(day_tmp);
+				time_day_29.push(day_tmp);
+				time_day_28.push(day_tmp);
+				break;
+		}
+	}
+	time_day.combobox("loadData", time_day_31);
+	//end_time_day.combobox("loadData", time_day_31);
+	
+	
+	
+		var date_data = $("input#time_set_date").textbox({
+		fieldLabel: $.su.CHAR.TIME_SETTING.DATE,
+		vtype:"date",
+		allowBlank:false,
+		inputCls:"xl",
+		tips: $.su.CHAR.TIME_SETTING.DATEFORMAT
+	}).on("ev_setValue",function(e, value){
+		if(!value){
+			return false;
+		}
+		
+		var date_para = value.split("/");
+		var year = date_para[2];
+		var month = date_para[0];
+		var day = date_para[1];
+		time_year.combobox("setValue", year);
+		time_month.combobox("setValue", month);
+		time_day.combobox("setValue", day);
+	}).textbox("hide");
+	
+
+	$("input#time_set_time").time({
+		//fieldLabel: "时间",
+		inputCls:"xl",
+		tips:"",
+		cls:"inline-block",
+		autoTrim: true
+	});
+	
+	$("input#time_set_time").time("setValue", "24:00:99");
+	
+	
+	
+	var end_time_year = $("#end_time_set_year").combobox({
+		fieldLabel: "结束时间",
+		inputCls:"s",
+		cls:"inline",
+		tips:"年",
+		tipsCls:"time-separator",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+		updateDateChoice();
+	});
+	
+		end_time_year.combobox("loadData", time_year_arr);
+
+	var end_time_month = $("#end_time_set_month").combobox({
+		fieldLabel:"",
+		inputCls:"s",
+		labelCls:"hidden",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"月",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDateChoice();
+		updateDate();
+	});
+	
+	end_time_month.combobox("loadData", time_month_arr);
+	
+	var end_time_day = $("#end_time_set_day").combobox({
+		fieldLabel: "",
+		labelCls:"hidden",
+		inputCls:"s",
+		tipsCls:"time-separator",
+		cls:"inline",
+		tips:"日",
+		items:[]
+	}).on("ev_change", function(e, oldValue, newValue){
+		updateDate();
+	});
+	
+		end_time_day.combobox("loadData", time_day_31);
+	
+	
+	var end_date_data = $("input#end_time_set_date").textbox({
+		fieldLabel: $.su.CHAR.TIME_SETTING.DATE,
+		vtype:"date",
+		allowBlank:false,
+		inputCls:"xl",
+		tips: $.su.CHAR.TIME_SETTING.DATEFORMAT
+	}).on("ev_setValue",function(e, value){
+		if(!value){
+			return false;
+		}
+		
+		var date_para = value.split("/");
+		var year = date_para[2];
+		var month = date_para[0];
+		var day = date_para[1];
+		end_time_year.combobox("setValue", year);
+		end_time_month.combobox("setValue", month);
+		end_time_day.combobox("setValue", day);
+	}).textbox("hide");
+
+
+	$("input#end_time_set_time").time({
+		//fieldLabel: "时间",
+		inputCls:"xl",
+		tips:"",
+		cls:"inline-block",
+		autoTrim: true
+	});
+	
+	
+	
+	
+	    var now = new Date();
+			var year = now.getFullYear();
+			var month = now.getMonth() + 1;
+			var date = now.getDate();
+			var hour = now.getHours();
+			var minute = now.getMinutes();
+			var second = now.getSeconds();
+			if (month < 10){month = "0"+month;}
+			if (date < 10){date = "0"+date;}
+			if (hour < 10){hour = "0"+hour;}
+			if (minute < 10){minute = "0"+minute;}
+			if (second < 10){second = "0"+second;}
+	    
+	    $("#time_set_time").time("setValue", "00:00:00");
+			//$("#time_set_time").time("setValue", hour+":"+minute+":"+second);
+			$("#time_set_date").textbox("setValue", month+"/"+date+"/"+year);
+			$("#end_time_set_time").time("setValue", hour+":"+minute+":"+second);
+			$("#end_time_set_date").textbox("setValue", month+"/"+date+"/"+year);
+	
+	
+	    var $frameMsg = $("#frame-msg").msg({
+        showHead: true,
+        closeBtn: true,
+        cls:"",
+        title: $.su.CHAR.WPORTAL.PREVIEW_WINDOW_TITLE,
+        type: 'window'
+    }).msg("hide");	
+	
+    function open_detail() {
+    	
+    	  document.getElementById('preview-frame').contentDocument.location.href = "https://www.baidu.com";
+        $frameMsg.msg("show");
+ 	
+    }
+
+
+    var rule_id = $("#rule_id").textbox({
+        fieldLabel: "状态",
+        cls: "l",
+        allowBlank: true,
+        //vtype: "name",
+        maxLength:8,
+        tips:"（可选）",
+		    validator: function(v){		   
+			  {
+			    return (new $.su.vtype({
+			    	vtype: "number",
+			    	min: 1,
+			    	max: 100000000,
+			    	validator:function(value){
+			    		if(value < this.min || value > this.max){
+			    			return "请输入数字";
+			    		}else{
+			    			return true;
+			    		}
+			    	}
+			    }).validate(v));
+			}
+            
+        }
+	});
+   
+
+    var src_ip = $("#src_ip").textbox({
+        fieldLabel: $.su.CHAR.MAC_FILTERING.MAC,
+        textFormat: $.su.format.ip,
+		    allowBlank: true,
+		    tips:"（可选）",
+		    vtype: {
+            vtype: "ip",
+            allowAllZeroFlag: true
+        }     
+    });
+    
+    
+    var http_url = $("#http_url").textbox({
+		fieldLabel: "URL地址",
+		cls: "l",
+		allowBlank: true,
+		tips: "(可选，可填部分)"
+		/*validator: function(v){		   
+			{
+			    return (new $.su.vtype({
+			    	vtype: "number",
+			    	min: 1,
+			    	max: 65535,
+			    	validator:function(value){
+			    		if(value < this.min || value > this.max){
+			    			return "请输入80或者1024-65535之间的数字";
+			    		}else{
+			    			return true;
+			    		}
+			    	}
+			    }).validate(v));
+			 }
+            
+     }*/
+	});
+	
+//	$("#http_url").textbox("hide");
+
+/*
+	$("#mac_filtering_rule_list").panel({
+		title: "攻击日志",
+		collapsible: false
+	});*/
+
+	var ruleListProxy = new $.su.Proxy({
+		url: URL_RULE_LIST
+	});
+
+
+	var ruleGrid = $("#mac_filtering_rule_grid").grid({
+		operation: [{
+			xtype: "totalCount",
+			fieldLabel: $.su.CHAR.DHCP_SERVER.CLIENT_NUMBER,
+			cls: "left"
+		}],
+        editor: {
+            content:"#own_editor",
+            fields: [
+                {name: "rule_id"},
+                {name: "src_ip"},
+                {name: "http_url"}
+            ]
+        },
+		store:{
+			proxy: ruleListProxy,
+			fields: [
+			        	{name: "time"},
+                {name: "src_ip"},        
+                {name: "geoip"},
+                {name: "rule_id"},  
+                {name: "atk"},               
+                {name: "method"},
+                {name: "url"},              
+                {name: "detail"}
+			],
+			autoLoad: true
+		},
+        paging:[],
+		columns: [
+			/*{
+				xtype: "checkcolumn",
+				width: $.su.CHAR.SETTING.MAC_FILTERING.CHECK_COLUMN_WIDTH
+                //width:80
+			},*/
+			{
+				xtype: "rownumberer",
+				//width: $.su.CHAR.SETTING.MAC_FILTERING.ROW_NUMBER_WIDTH
+       width:20
+			},
+			{
+				text: "时间",
+				//width: $.su.CHAR.SETTING.MAC_FILTERING.NAME_WIDTH,
+        width:50,
+				dataIndex: "time",
+        xtype:"comment"
+			},
+            {
+                text: "源IP地址",
+                width: 40,
+                dataIndex: "src_ip"
+            },           
+            {
+                text: "IP地理位置",
+                width: 40,
+                dataIndex: "geoip"
+            },
+            {
+                text: "状态",
+                width: 30,
+                dataIndex: "rule_id"
+            },   
+            {
+                text: "是否攻击",
+                width: 20,
+                dataIndex: "atk"
+            },          
+            {
+                text: "方法",
+                width: 20,
+                dataIndex: "method",
+            },
+            {
+                text: "URL地址",
+                width: 90,
+                dataIndex: "url",
+            },              
+            {
+                text: "详情",
+                width: 50,
+                dataIndex: "detail",
+                renderer:function(dd, index, data){
+               
+								//console.log(dd,index,data);
+								if("" == dd || typeof dd == "undefined"){
+									return "---";
+								}
+								
+								var addHTMl = "";
+								addHTMl += "<div class=\"dhcp-client-bind\" data-index="+ index +">";
+								addHTMl += "<span class=\"icon\"></span>";
+								//addHTMl += "<sapn class=\"add\">" + $.su.CHAR.DHCP.BIND + "</span>";
+								addHTMl += "</div>";
+								return addHTMl;							
+									
+								//return "&nbsp&nbsp" + "<a href='javascript:void(0);' onclick='open_detail()' class='btn-detail' data-index='"+ index +"'>更多</a>";								
+
+								return data;
+							}
+            }
+            
+            /*,            
+            
+            {
+                xtype: "settings",
+                width: $.su.CHAR.SETTING.MAC_FILTERING.SETTING_WIDTH
+               // width:120
+            }*/
+		],
+			operation:[{
+            xtype: "totalCount",
+            fieldLabel: "本次查询显示数量",
+            cls: "left xs",
+            labelCls:"xs"
+        }, "prompt", "search"]
+		//operation: 'prompt|search'
+				
+}).delegate('div.dhcp-client-bind', 'click', function(e){
+        var index = $(this).data("index");
+        var linedata = ruleGrid.grid("getStore").data[index];      
+         
+        //document.getElementById('preview-frame').contentDocument.location.href = linedata.time;
+        document.getElementById('preview-frame').contentDocument.location.href = "/trdetail-"+linedata.detail+'.txt';
+        $frameMsg.msg("show");
+    });
+
+    		
+		
+		$("input#mac_filtering_enable").switchbutton("hide");
+
+    var helpMacFiltering = new $.su.Help({
+        container: "div#mac_filtering_help",
+        content: ["NOTHING_CONFIG"]
+    });
+
+});
+</script>
+</body>
+
+</html>

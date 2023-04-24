@@ -1,0 +1,415 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>system log</title>
+<style type="text/css">
+</style>
+</head>
+
+<body>
+<div class="func-container">
+    <div id="function_setting">
+	    <form id="log_settings">
+            <input id="refresh" name="refresh"/>
+            <!--<input id="level_switch" name="level_switch" />-->
+			<input id="level" name="level" />
+			<input id="module_switch" name="module_switch" />
+			<input id="module" name="module" />
+			<input id="log_send" name="log_send" />
+			<input id="send_server" name="send_server" />
+			<button id="log_submit" type="button"></button>
+		</form>
+    </div>
+
+
+	<div id="function_list">
+		<div id="log_list"></div>
+
+		<form id="save-setting" enctype="multipart/form-data">
+			<input type="hidden" />	
+		</form>
+
+		<div class="part-seperate button-context ">
+			
+			<button id="save_log" type="button"></button>
+			<input id="dyndns-status" name="status" />
+		</div>
+	</div>
+
+	<div id="help_system_log"></div>
+</div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+    var LOG_LIST_URL_NEW = $.su.url("/admin/killip-log?form=loglist");
+	var LOG_FILTER_URL_NEW= $.su.url("/admin/killip-log?form=setting");
+	//var LOG_TYPE_URL_NEW= $.su.url("/admin/logger?form=types");
+	
+
+	$("#function_setting").panel({
+        title: $.su.CHAR.SYSLOG.SETTINGS,
+        collapsible: false,
+        help:$("#help_system_log")
+    });
+    
+    $("#function_setting").panel("hide");
+	
+    var settingProxy = new $.su.Proxy({
+        url: LOG_FILTER_URL_NEW
+        /* async: false*/
+    });
+
+   	
+   /*$("#refresh").checkbox({
+        items: [
+            {boxlabel: $.su.CHAR.SYSLOG.AUTO_REFRESH, inputValue: "on", uncheckedValue: "off"}
+        ]
+   }); */
+   $("#refresh").switchbutton({
+			fieldLabel:"自动刷新"
+    });
+   
+   
+    /*$("#level_switch").checkbox({
+		items:[{
+			boxlabel:$.su.CHAR.SYSLOG.LOG_FILTER,inputValue:"on",uncheckedValue: "off"
+		}],
+		tips:"",
+		tipsCls:"xxxxl",
+		cls:"inline-block xxl"
+    }).on("ev_change", function(e, oldValue, newValue){
+        var val = (newValue[0]=="level_switch"||newValue[0]=="on") ? "on" : "off";
+        switch(val)
+        {
+            case "on":
+                $("#level").combobox("enable");
+                break;
+            case "off":
+                $("#level").combobox("disable");
+                break;
+        }
+    }); */
+   
+    $("#level").combobox({
+    	//cls:"inline",
+    	fieldLabel:"日志等级",
+        allowBlank:false,
+        multiSelect: false ,  
+        items:[
+		        {name:$.su.CHAR.SYSLOG.ALL_LEVEL,value:"ALL"},
+                {name:$.su.CHAR.SYSLOG.EMERGENCY,value:"EMERGENCY"},
+				{name:$.su.CHAR.SYSLOG.ALERT,value:"ALERT"},
+				{name:$.su.CHAR.SYSLOG.CRITICAL,value:"CRITICAL"},
+				{name:$.su.CHAR.SYSLOG.ERROR,value:"ERROR"},
+				{name:$.su.CHAR.SYSLOG.WARNING,value:"WARNING"},
+				{name:$.su.CHAR.SYSLOG.NOTICE,value:"NOTICE"},
+				{name:$.su.CHAR.SYSLOG.INFO,value:"INFO"},
+				{name:$.su.CHAR.SYSLOG.DEBUG,value:"DEBUG"}
+            ]
+    });
+	
+	$("#module_switch").checkbox({
+		items:[{
+			boxlabel:$.su.CHAR.SYSLOG.MODULE_FILTER,inputValue:"on",uncheckedValue: "off"
+		}]
+    }).on("ev_change", function(e, oldValue, newValue){
+        var val = (newValue[0]=="module_switch"||newValue[0]=="on") ? "on" : "off";
+        switch(val)
+        {
+            case "on":
+                $("#module").combobox("enable");
+                break;
+            case "off":
+                $("#module").combobox("disable");
+                break;
+        }
+    }); 
+   
+    $("#module").combobox({
+        allowBlank:false,
+        multiSelect: false ,  
+        items:[
+                {name:$.su.CHAR.SYSLOG.ALL_MODULE,value:"ALL"},
+				{name:$.su.CHAR.SYSLOG.ACCOUNT_MNGT,value:"account_mngt"},
+				{name:$.su.CHAR.SYSLOG.BALANCE,value:"balance"},
+				{name:$.su.CHAR.SYSLOG.BEHAVIOR_CTL,value:"behavior_ctl"},
+				{name:$.su.CHAR.SYSLOG.CMXDDNS,value:"cmxddns"},
+				{name:$.su.CHAR.SYSLOG.DHCP_CLIENT,value:"dhcp_client"},
+				{name:$.su.CHAR.SYSLOG.DHCP_SERVER,value:"dhcp_server"},
+				{name:$.su.CHAR.SYSLOG.DYN3322DDNS,value:"dynddns"},
+				{name:$.su.CHAR.SYSLOG.FIREWALL,value:"firewall"},
+				{name:$.su.CHAR.SYSLOG.IPSEC,value:"ipsec"},
+				{name:$.su.CHAR.SYSLOG.PHDDNS,value:"phddns"},
+				{name:$.su.CHAR.SYSLOG.PORTAL,value:"portal"},
+				{name:$.su.CHAR.SYSLOG.PPP,value:"ppp"},
+				{name:$.su.CHAR.SYSLOG.REMOTE_MNGT,value:"remote_mngt"},
+				{name:$.su.CHAR.SYSLOG.TIME_MNGT,value:"time_mngt"},
+				{name:$.su.CHAR.SYSLOG.TIME_SETTING,value:"time_setting"},
+				{name:$.su.CHAR.SYSLOG.UPNP,value:"upnp"},
+				{name:$.su.CHAR.SYSLOG.APMNGR,value:"apmngr"},
+				{name:$.su.CHAR.SYSLOG.APUPD,value:"apupd"},
+				{name:$.su.CHAR.SYSLOG.APDB,value:"apdb"},
+				{name:$.su.CHAR.SYSLOG.RDMNGR,value:"rdmngr"},
+				{name:$.su.CHAR.SYSLOG.MULT_LINK,value:"mult_link"},
+				{name:$.su.CHAR.SYSLOG.AC_PORTAL,value:"ac_portal"},
+				{name:$.su.CHAR.SYSLOG.MAC_AUTH,value:"mac_auth"},
+				{name:$.su.CHAR.SYSLOG.AC_USERMNGR,value:"ac_usermngr"},
+				{name:$.su.CHAR.SYSLOG.WSERVICE,value:"wservice"},
+				{name:$.su.CHAR.SYSLOG.WSTATION,value:"wstation"},
+				{name:$.su.CHAR.SYSLOG.LOAD_BALANCE,value:"load_balance"}
+            ]
+    });
+	
+	$("#log_send").switchbutton({
+		fieldLabel:$.su.CHAR.SYSLOG.SEND_LOG
+    }).on("ev_setValue", function(e, value){
+        switch(value)
+        {
+            case "on":
+                $("#send_server").textbox("enable");
+                break;
+            case "off":
+                $("#send_server").textbox("disable");
+                break;
+        }
+    }); 
+   
+    $("#send_server").textbox({
+		fieldLabel: $.su.CHAR.SYSLOG.SERVER,
+        allowBlank: false,
+		vtype:"ip"
+    });
+	
+   
+
+	var autoRefresh = "on";   
+    var sysLogForm = $("#log_settings").form({
+        proxy: settingProxy,
+        autoLoad:true,
+        fields: [
+            {name:"refresh", mapping: "refresh"},
+			//{name:"level_switch",mapping:"level_switch"},
+			{name:"level",mapping:"level"},
+			{name:"module_switch",mapping:"module_switch"},
+			{name:"module",mapping:"module"},
+			{name:"log_send",mapping:"log_send"},
+			{name:"send_server",mapping:"send_server"}
+        ],
+        submitBtn: "#log_submit"
+    }).on("ev_loadData", function(e){
+    	autoRefresh = $("#refresh").switchbutton("getValue");
+    	refreshLog();
+    });
+
+
+    $("#log_submit").button({
+    	text:"保存",
+    	cls:"submit",
+    	handler:function(e){
+    		
+    		if(sysLogForm.form("validate") != true){
+    			return false;
+    		}
+    		$.su.loading.show();
+    		sysLogForm.form("submit", {}, function(data){
+    			$.su.loading.hide();
+    		},function(error){
+    			$.su.loading.hide();
+    		},function(fail){
+    			$.su.loading.hide();
+    		});
+    	}
+    });
+
+    function refreshLog(){
+    	if(!$.contains(document, sysLogForm[0])){			
+			return;
+		}
+		if("on" != autoRefresh){			
+			return;
+		}
+		$("a#refresh").click();
+		setTimeout(function() {
+			refreshLog();
+		}, 10000);
+
+    }
+
+
+
+	$("#function_list").panel({
+        title: $.su.CHAR.SYSLOG.TITLE,
+        collapsible: false
+    });
+	
+	var storeTest = new $.su.Store({
+		proxy: {
+			url: LOG_LIST_URL_NEW
+		},
+		fields: [
+			{name: "time"},
+			{name: "ip"},
+			{name: "geoip"},
+			{name: "type"},
+			{name: "killtime"},
+			{name: "ltime"},
+			{name: "content"}
+		],
+		updateMode:"complete",
+		autoLoad: true
+	});
+
+
+	$("div#log_list").grid({
+		store:storeTest,
+		minLines:0,
+		paging:{
+			numPerPage: 1000
+		},
+		columns: [
+			{
+				text: $.su.CHAR.SYSLOG.ID, 
+				xtype: "rownumberer",
+				width: 30
+			},
+			{
+				text: $.su.CHAR.SYSLOG.TIME,
+				dataIndex: "time",
+				width: 50
+			},
+			{
+				text: "IP地址", 
+				width: 50,
+				dataIndex: "ip",
+				renderer:function(dd, index, data){
+               
+								//console.log(dd,index,data);
+								if("" == dd || typeof dd == "undefined"){
+									return "---";
+								}
+								
+								var addHTMl = "";
+								addHTMl += "<div class=\"dhcp-client-bind\" data-index="+ index +">";
+								
+								addHTMl += "<a style=\"color:blue\"; href=\"#\">" + dd + "</a>";	
+								//addHTMl += "<span class=\"icon\"></span>";
+								//addHTMl += "<sapn class=\"add\">" + $.su.CHAR.DHCP.BIND + "</span>";
+								addHTMl += "</div>";
+								return addHTMl;							
+									
+								//return "&nbsp&nbsp" + "<a href='javascript:void(0);' onclick='open_detail()' class='btn-detail' data-index='"+ index +"'>更多</a>";								
+
+								return data;
+							}
+		 },
+			{
+				text: "IP地理位置", 
+				width: 50,
+				dataIndex: "geoip"
+		 },
+		 	{
+				text: "封禁时间（秒）", 
+				width: 60,
+				dataIndex: "killtime"
+		 },
+			{
+				text: "剩余时间（秒）", 
+				width: 60,
+				dataIndex: "ltime"
+		 },
+			{
+				text: "类型",  				
+				dataIndex: "type",
+				width: 60
+			},			
+						
+			{
+				text: "备注", 
+				width: 80,
+				dataIndex: "content"			
+			}
+		],
+		operation: ["refresh"	]
+	}).delegate('div.dhcp-client-bind', 'click', function(e){
+        var index = $(this).data("index");
+        var linedata = $("div#log_list").grid("getStore").data[index];      
+        location.href = "index.html?atk-log&sip="+linedata.ip; 
+        //document.getElementById('preview-frame').contentDocument.location.href = linedata.time;
+       // document.getElementById('preview-frame').contentDocument.location.href = "/detail-"+linedata.detail+'.txt';
+        //$frameMsg.msg("show");
+    });
+	
+	$("div#log_list").on("ev_load",function(e, data){
+		$("td.grid-content-td-content span").css({
+			"textAlign": "left",
+			"padding": "0 20px 0"
+		});
+
+		$("td.grid-content-td-content span span").css({
+			"margin": "0"
+		});
+
+		/*$("td.grid-content-td-content").css({
+			"textAlign": "left"
+		});*/
+	});
+	
+
+	
+
+	var dyndnsStatus = $("input#dyndns-status").status({
+		cls: "inline-block",
+		proxy: {
+			url: LOG_LIST_URL_NEW
+		}
+	});
+
+
+	$("#log_prompt .text-successed").html($.su.CHAR.OPERATION.FORM_SAVED);
+	$("#log_prompt .text-failed").html($.su.CHAR.OPERATION.FORM_FAILED);
+
+	$("#save-setting").form({
+		proxy:{url: LOG_LIST_URL_NEW},
+		formEnctype: "multipart/form-data",
+		traditional: true,
+		hiddenFrame: true,
+		autoLoad: false
+	});
+
+	$("#save_log").button({
+		fieldLabel: null,
+		text: $.su.CHAR.SYSLOG.SAVE_LOG,
+		cls:"inline-block",
+		handler: function(e){		
+			$("#save-setting").form('submit', {operation:'save'}, function(data){
+				$("#save-setting").form('prompt', false, "导出成功");
+			},function(error){
+				$("#save-setting").form('prompt', false, "导出失败");
+			},function(fail){
+				$("#save-setting").form('prompt', false, "导出失败");
+			});
+		}
+	});
+
+  $("#save_log").button("hide");
+  
+	$("#module_switch").checkbox("hide");
+	$("#module").combobox("hide");
+
+	var helpSystemLog = new $.su.Help({
+		container: "div#help_system_log",
+		content: ["SYSTEM_LOG", "SYSTEM_LOG_SETTING_R", "SYSTEM_LOG_LIST"]
+	});
+   
+});
+</script>
+</body>
+
+</html>

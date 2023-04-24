@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>MAC Filtering</title>
+<style type="text/css">
+</style>
+</head>
+
+<body>
+<div class="func-container">
+  
+
+    <div id="own_editor">
+            
+        <input id="textname" name="textname" > 
+        <input id="url" name="url" >       
+            
+    </div>
+
+    <div id="mac_filtering_rule_list">
+        <div id="mac_filtering_rule_grid">
+        </div>
+    </div>
+
+    <div id="mac_filtering_help"></div>
+</div>
+
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){
+    var    URL_RULE_LIST = $.su.url("/admin/dirlist?form=list");
+
+    
+    var textname = $("#textname").textbox({
+        fieldLabel: "备注",
+        cls: "l",
+        allowBlank: false,
+        //vtype: "name",
+        maxLength:28,
+        tips:"（1-28个字符）"
+    });
+
+    var url = $("#url").textbox({
+        fieldLabel: "URL地址",       
+		    allowBlank: false,
+		     inputCls: 'xxxl',
+		    maxLength:150,
+        tips:"（5-128个字符）"
+    });
+    
+    
+ 
+
+	$("#mac_filtering_rule_list").panel({
+		title: "服务器目录学习",
+		collapsible: false
+	});
+
+	var ruleListProxy = new $.su.Proxy({
+		url: URL_RULE_LIST
+	});
+
+
+	var ruleGrid = $("#mac_filtering_rule_grid").grid({
+        editor: {
+            content:"#own_editor",
+            fields: [
+                {name: "server"},
+                {name: "url"}
+            ]
+        },
+		store:{
+			proxy: ruleListProxy,
+			fields: [
+			        	{name: "time"},
+			        	{name: "server"},
+                {name: "url"}
+			],
+			autoLoad: true
+		},
+        paging:[],
+		columns: [
+			/*{
+				xtype: "checkcolumn",
+				width: $.su.CHAR.SETTING.MAC_FILTERING.CHECK_COLUMN_WIDTH
+                //width:80
+			},*/
+			{
+				xtype: "rownumberer",
+				width: $.su.CHAR.SETTING.MAC_FILTERING.ROW_NUMBER_WIDTH
+                //width:80
+			},
+			{
+				text: "最近访问时间",
+				width: 80,
+               // width:150,
+				dataIndex: "time",
+        xtype:"comment"
+			},
+            {
+                text: "后台服务器",
+                width:80,
+                dataIndex: "server"
+            },
+            {
+                text: "目录（二级)",
+                width:200,
+                dataIndex: "url"
+            }
+		],
+		operation:[{
+            xtype: "totalCount",
+            fieldLabel: "规则条数",
+            cls: "left xs",
+            labelCls:"xs"
+        }, "refresh"]
+	}).on("ev_load", function(e,data, others){
+			if(others)/* 閫氳繃json閲岀殑others鍙傛暟浼犻€掑姩鎬侀榾鍊?*/
+			{
+				/*淇濈暀涓嶇敤*/
+				//console.log(others.max_rules);
+                maxrules = others.max_rules;
+			}
+		});
+		
+
+
+    var helpMacFiltering = new $.su.Help({
+        container: "div#mac_filtering_help",
+        content: ["NOTHING_CONFIG"]
+    });
+
+});
+</script>
+</body>
+
+</html>

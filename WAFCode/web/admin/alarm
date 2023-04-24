@@ -1,0 +1,5 @@
+{
+	"id": 1,
+	"result": {"enable":"on","filter_mode":"alert","jump":"http://www.hihttps.com/","staticfile":"jpg|png|js|gif|css|ico|txt|mp4|webp","wwwdir":"","realip":"","cdn":"","tracelog":"on","transparent":"off","interfaces":"LAN"},
+	"error_code": "0"
+}

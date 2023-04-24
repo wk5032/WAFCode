@@ -1,0 +1,215 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>action_check</title>
+	<style type="text/css">
+	</style>
+</head>
+
+<body>
+	<div class="func-container">
+	<!-- 	<div id="action_check">
+			<form id="action_form">
+				<input id="serverip" name="serverip" value=""/>
+				<input id="enable" name="enable" value=""/>
+			</form>
+		</div>
+		
+		用户账户修改 -->
+<div id="user-modify-msg">
+	<form id="user-modify-form">
+		<input type="text"  id="old_acc" name="old_acc" value="" />
+    	<input type="password"  id="old_pwd" name="old_pwd" value="" />
+		<input type="text"  id="new_acc" name="new_acc" value="" />
+    	<input type="password"  id="new_pwd" name="new_pwd" value="" />
+		<input type="password"  id="cfm_pwd" name="cfm_pwd" value="" />
+		<input id="pwd_status"  value="" />
+			<button type="button" id="user-modify-btn"></button>
+	</form>
+
+</div>
+		
+	</div>
+	<div id="help"></div>
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){ 
+	var actionCheck_proxy = new $.su.Proxy({
+		url:$.su.url('/admin/logger?form=action_check')
+	})
+
+/*
+	$("div#action_check").panel({
+		title: "上网行为分析",
+		collapsible: false,
+		help:$("#help")
+	});
+
+	$("#serverip").textbox({
+		fieldLabel:"行为审计服务器地址",
+		vtype:"ip",
+		allowBlank:false
+	});
+
+	$("#serverip").textbox("hide");
+	$("#enable").switchbutton({
+		fieldLabel:"上传用户上网行为"
+	});
+
+	$("#action_form").form({
+		autoLoad:true,
+		proxy: actionCheck_proxy,
+        fields: [
+            {name: "enable", mapping: "enable"},
+			{name: "serverip", mapping: "serverip"}
+        ],
+        submitBtn: "default"
+	});
+	
+	*/
+	
+	$("div#user-modify-msg").panel({
+		title: "修改用户密码",
+		collapsible: false,
+		help:$("#help")
+	});
+
+	var old_acc = $("input#old_acc").textbox({
+		fieldLabel: $.su.CHAR.ACCOUNT.OLDUSER,
+		vtype:"ascii_visible",
+		minLength:1,
+		maxLength:15,
+		allowBlank: false
+	});
+
+	var old_pwd = $("input#old_pwd").password({
+		fieldLabel: $.su.CHAR.ACCOUNT.OLDPWD,
+		allowBlank: false,
+		vtype:"ascii_visible",
+		showLevel:false,
+		minLength:1,
+		maxLength:15
+	});
+
+	var new_acc = $("input#new_acc").textbox({
+		fieldLabel: $.su.CHAR.ACCOUNT.NEWUSER,
+		cls:"part-separate",
+		allowBlank: false,
+		vtype:"ascii_visible",
+		minLength:1,
+		maxLength:15
+	});
+	
+	
+	
+	var passwordCheck = function(new_pwd, cfm_val){
+		
+		if(cfm_val == new_pwd){
+			$("#pwd_status").status("setSuccess");
+			return true;
+		}else{
+			$("#pwd_status").status("setFailed");
+			return false;
+		};
+	}; 
+
+	$("input#new_pwd").password({
+		fieldLabel: $.su.CHAR.ACCOUNT.NEWPWD,
+		allowBlank: false,
+		vtype:"ascii_visible",
+		minLength:6,
+		allowVisible: true,
+		maxLength:15
+	}).on("ev_change", function(item, data){
+		$("#pwd_status").status('setNormal');
+		$("input#cfm_pwd").password('setNormal');
+		
+		var new_pwd = $("input#new_pwd").password("getValue");
+		var cfm_val = $("input#cfm_pwd").password("getValue");
+		if ( cfm_val){
+			passwordCheck(new_pwd, cfm_val);
+		}
+	}).on("ev_validatechange", function(item, data){
+		var new_pwd = $("input#new_pwd").password("getValue");
+	    var cfm_val = $("input#cfm_pwd").password("getValue");
+
+		if( cfm_val=='' ){
+			$("#pwd_status").status('setNormal');
+			return true;
+		}else{
+			passwordCheck(new_pwd, cfm_val);
+		};
+	});
+	
+
+	$("input#cfm_pwd").password({
+		fieldLabel: $.su.CHAR.ACCOUNT.CONFIRM,
+		vtype:"ascii_visible",
+		minLength:6,
+		maxLength:15,
+		cls:"inline",
+		allowBlank: false,
+		allowVisible: true,
+		validator:function(val){
+			return true;
+		},
+		showLevel:false
+	}).on("ev_change ev_validatechange", function(){
+		var new_pwd = $("input#new_pwd").password("getValue");
+	    var cfm_val = $("input#cfm_pwd").password("getValue");
+		
+		if (new_pwd == ""){
+			if ( cfm_val == "" ){
+				$("#pwd_status").status("setNormal");
+			}else{
+				if (!passwordCheck(new_pwd, cfm_val)){
+					$("input#cfm_pwd").password("setError");
+				};
+			}
+		}else{
+			if (!passwordCheck(new_pwd, cfm_val)){
+				$("input#cfm_pwd").password("setError");
+			}
+		}
+	});
+
+	$("#pwd_status").status({
+		cls:"inline"
+	});
+
+	$("#user-modify-btn").button({
+		text:$.su.CHAR.OPERATION.SAVE,
+		handler:function(){
+			alert("仅演示");
+			return;
+			user_form.form("submit", {}, function(data){
+				setTimeout(function() {
+					user_modify_msg.msg("close");
+				}, 1000);		
+			}, function(error){
+
+			}, function(fail){
+
+			});
+		}
+	});
+
+	
+	
+/*
+	var help = new $.su.Help({
+        container: "div#help",
+        content: "ACTION_CHECK"
+    });*/
+
+});
+</script>
+</body>
+
+</html>

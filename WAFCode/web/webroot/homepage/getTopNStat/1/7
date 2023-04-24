@@ -1,0 +1,26 @@
+{
+  "adipList": [],
+  "countryList": [{
+  "content1": "au",
+  "content2": "澳大利亚",
+  "content3": "3",
+  "content4": null,
+  "haveLocal": null,
+  "assetNameMap": null
+}],
+  "asipList": [{
+  "content1": "192.168.1.173",
+  "content2": "3",
+  "content3": "00",
+  "content4": "Local",
+  "haveLocal": null,
+  "assetNameMap": null
+},{
+  "content1": "1.1.1.6",
+  "content2": "3",
+  "content3": "au",
+  "content4": "澳大利亚",
+  "haveLocal": null,
+  "assetNameMap": null
+}]
+}

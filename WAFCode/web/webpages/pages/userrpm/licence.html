@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>action_check</title>
+	<style type="text/css">
+	</style>
+</head>
+
+<body>
+	<div class="func-container">
+		<div id="action_check">
+			<form id="action_form">
+				<input id="serverid" name="serverid" value=""/>
+				<input id="serial"   name="serial" value=""/>
+			</form>
+		</div>
+		
+	</div>
+	<div id="help"></div>
+<script type="text/javascript">
+try{
+    $
+}catch(e){
+    location.href = "/";
+};
+
+$(document).ready(function(e){ 
+	var actionCheck_proxy = new $.su.Proxy({
+		url:$.su.url('/admin/licence?form=action_check')
+	})
+
+
+	$("div#action_check").panel({
+		title: "正版授权",
+		collapsible: false,
+		help:$("#help")
+	});
+
+	$("#serverid").textbox({
+		fieldLabel:"机器码",		
+		allowBlank:false
+	});
+
+	$("#serial").textbox({
+		fieldLabel:"授权码",	
+		allowBlank:false
+	});
+
+	
+
+
+	$("#action_form").form({
+		autoLoad:true,
+		proxy: actionCheck_proxy,
+        fields: [
+            {name: "serial", mapping: "serial"},
+			{name: "serverid", mapping: "serverid"}
+        ],
+        submitBtn: "default"
+	});
+
+
+
+});
+</script>
+</body>
+
+</html>
